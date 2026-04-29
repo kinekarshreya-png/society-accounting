@@ -3,235 +3,2204 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SocietyPro Advanced Accounting</title>
+<title>SocietyPro Accounting</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>
-:root{--navy:#1a2744;--navy2:#243059;--gold:#c9963a;--goldl:#fdf3e3;--ink:#1c1c2e;--muted:#6b7280;--light:#f8f7f4;--white:#fff;--border:#e5e2db;--green:#1a7a4a;--greenl:#e8f7ef;--red:#c0392b;--redl:#fdecea;--blue:#1e5fa8;--bluel:#eaf2ff;--sh:0 2px 16px rgba(26,39,68,.10);--r:12px;--r2:8px;--sb:260px}
+:root{
+  --navy:#1a2744;--navy2:#243059;
+  --gold:#c9963a;--goldl:#fdf3e3;
+  --ink:#1c1c2e;--muted:#6b7280;--light:#f4f6fb;
+  --white:#fff;--border:#e5e2db;
+  --green:#1a7a4a;--greenl:#e8f7ef;
+  --red:#c0392b;--redl:#fdecea;
+  --blue:#1e5fa8;--bluel:#eaf2ff;
+  --sh:0 2px 16px rgba(26,39,68,.10);
+  --r:12px;--r2:8px;--sb:245px;
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'IBM Plex Sans',sans-serif;background:var(--light);color:var(--ink);min-height:100vh;font-size:14px}
 h1,h2,h3{font-family:'Playfair Display',serif}
 input,select,textarea,button{font-family:'IBM Plex Sans',sans-serif}
-#loader{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:12px}
-#loader h2{color:#fff}#loader p{color:rgba(255,255,255,.5)}.lbar{width:160px;height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
-.lbar div{height:100%;background:var(--gold);animation:ld 1.2s ease}@keyframes ld{from{width:0}to{width:100%}}
-#pgLogin{display:none;min-height:100vh;background:var(--navy);align-items:center;justify-content:center}
-#pgLogin.show{display:flex}.lcard{background:#fff;border-radius:18px;padding:44px 36px;width:92%;max-width:380px;box-shadow:0 28px 70px rgba(0,0,0,.28)}
-#app{display:none;min-height:100vh;flex-direction:column}#app.show{display:flex}
-#topbar{background:var(--navy);height:52px;display:flex;align-items:center;padding:0 18px;gap:12px;position:sticky;top:0;z-index:100}
-.tb-logo{font-family:'Playfair Display',serif;font-size:1.05rem;color:#fff}.tb-logo span{color:var(--gold)}
-.tb-soc{background:rgba(255,255,255,.12);padding:3px 11px;border-radius:16px;font-size:.76rem;color:rgba(255,255,255,.85);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tb-right{margin-left:auto;display:flex;gap:7px}.tb-btn{background:rgba(255,255,255,.12);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.78rem}
-.mob-menu{display:none;background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:12px;transition:opacity .4s}
+#loader h2{color:#fff;font-size:1.6rem;font-family:'Playfair Display',serif}
+#loader p{color:rgba(255,255,255,.5);font-size:.82rem}
+.lbar{width:160px;height:3px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden}
+.lbar div{height:100%;background:var(--gold);border-radius:2px;animation:ld 1.4s ease forwards}
+@keyframes ld{from{width:0}to{width:100%}}
+
+/* LOGIN */
+#pgLogin{display:none;min-height:100vh;background:var(--navy);align-items:center;justify-content:center;background-image:radial-gradient(ellipse at 20% 50%,rgba(201,150,58,.15) 0%,transparent 60%)}
+#pgLogin.show{display:flex}
+.lcard{background:#fff;border-radius:18px;padding:44px 36px;width:92%;max-width:380px;box-shadow:0 28px 70px rgba(0,0,0,.3);animation:su .4s ease}
+@keyframes su{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+.lcard h1{font-size:1.8rem;color:var(--navy);text-align:center;margin-bottom:4px}
+.lcard .sub{text-align:center;font-size:.78rem;color:var(--muted);margin-bottom:28px}
+.lerr{color:var(--red);font-size:.8rem;text-align:center;min-height:16px;margin-top:4px}
+
+/* APP SHELL */
+#app{display:none;min-height:100vh;flex-direction:column}
+#app.show{display:flex}
+
+/* TOPBAR */
+#topbar{background:var(--navy);height:54px;display:flex;align-items:center;padding:0 18px;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.tb-logo{font-family:'Playfair Display',serif;font-size:1.08rem;color:#fff;white-space:nowrap}
+.tb-logo span{color:var(--gold)}
+.tb-soc{background:rgba(255,255,255,.12);padding:3px 12px;border-radius:16px;font-size:.76rem;color:rgba(255,255,255,.85);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb-right{margin-left:auto;display:flex;gap:7px;align-items:center}
+.tb-btn{background:rgba(255,255,255,.12);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.78rem;font-family:inherit;font-weight:500}
+.tb-btn:hover{background:rgba(255,255,255,.22)}
+.tb-fy{background:rgba(201,150,58,.25);border:1px solid rgba(201,150,58,.4);color:var(--gold);padding:3px 10px;border-radius:12px;font-size:.74rem;font-weight:600}
+.mob-menu{display:none;background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;padding:4px 8px}
+
+/* BODY WRAP */
 #bodyWrap{display:flex;flex:1;min-height:0}
-#sidebar{width:var(--sb);background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0}
-.ns{padding:9px 12px 3px;font-size:.66rem;font-weight:600;color:var(--muted);text-transform:uppercase}
-.ni{display:flex;align-items:center;gap:8px;padding:8px 15px;cursor:pointer;font-size:.84rem;color:var(--ink);border-left:3px solid transparent}
-.ni.active{background:var(--goldl);border-left-color:var(--gold);font-weight:600}
-#main{flex:1;padding:22px;overflow-y:auto}.panel{display:none}.panel.active{display:block}
-.ph{display:flex;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap}.pt{font-size:1.35rem;color:var(--navy)}
-.card{background:#fff;border-radius:var(--r);border:1px solid var(--border);padding:16px 18px;margin-bottom:14px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
-.stat{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:13px 15px;border-top:3px solid var(--navy)}.stat .sv{font-size:1.4rem;font-weight:700}
-.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}.fg label{font-size:.76rem;font-weight:600;color:var(--muted)}
-.fg input,.fg select,.fg textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r2);font-size:.88rem}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--r2);border:none;cursor:pointer;font-size:.84rem;font-weight:600}
-.bn{background:var(--navy);color:#fff}.bg{background:var(--green);color:#fff}.br{background:var(--red);color:#fff}.bgold{background:var(--gold);color:#fff}
-.bout{background:transparent;border:1.5px solid var(--navy);color:var(--navy)}.bgh{background:transparent;border:1.5px solid var(--border)}
-.tw{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border)}table{width:100%;border-collapse:collapse;font-size:.82rem}
-thead th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left}.cr{color:var(--green)}.dr{color:var(--red)}
-.chip{display:inline-block;padding:2px 8px;border-radius:16px;font-size:.7rem;font-weight:600}.cg{background:var(--greenl);color:var(--green)}
-.tabs{display:flex;gap:3px;background:#f0ede8;padding:3px;border-radius:9px;width:fit-content;margin-bottom:16px}
-.tab{padding:6px 14px;border-radius:7px;background:transparent;cursor:pointer}.tab.active{background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.1)}
-.alert{padding:10px 13px;border-radius:var(--r2);margin-bottom:12px;border-left:3px solid}.ai{background:var(--bluel);border-color:var(--blue)}
-.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:center;justify-content:center}
-.mbg.open{display:flex}.mbox{background:#fff;border-radius:15px;padding:26px 24px;width:100%;max-width:560px}
-@media(max-width:768px){#sidebar{position:fixed;left:-260px;top:52px;height:calc(100vh - 52px);z-index:200;transition:left .25s}#sidebar.open{left:0}.mob-menu{display:block!important}}
+
+/* SIDEBAR */
+#sidebar{width:var(--sb);background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;transition:left .25s}
+.ns{padding:10px 14px 3px;font-size:.63rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+.ni{display:flex;align-items:center;gap:8px;padding:9px 16px;cursor:pointer;font-size:.84rem;color:var(--ink);border-left:3px solid transparent;transition:all .15s;user-select:none}
+.ni .ic{width:18px;text-align:center;font-size:.95rem}
+.ni:hover{background:#f5f3ef;color:var(--navy)}
+.ni.active{background:var(--goldl);color:var(--navy);border-left-color:var(--gold);font-weight:600}
+
+/* MAIN */
+#main{flex:1;padding:22px;overflow-y:auto;background:var(--light)}
+.panel{display:none}
+.panel.active{display:block;animation:pi .2s ease}
+@keyframes pi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* PAGE HEADER */
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:8px}
+.pt{font-size:1.35rem;color:var(--navy)}
+.pt small{display:block;font-family:'IBM Plex Sans',sans-serif;font-size:.76rem;font-weight:400;color:var(--muted);margin-top:1px}
+
+/* CARDS */
+.card{background:#fff;border-radius:var(--r);border:1px solid var(--border);padding:18px 20px;margin-bottom:14px}
+.ct{font-size:.95rem;color:var(--navy);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;font-weight:600}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;border-top:3px solid var(--navy)}
+.stat.g{border-top-color:var(--green)}.stat.r{border-top-color:var(--red)}.stat.gold{border-top-color:var(--gold)}.stat.b{border-top-color:var(--blue)}
+.stat .sv{font-family:'Playfair Display',serif;font-size:1.45rem;color:var(--navy);font-weight:700}
+.stat .sl{font-size:.7rem;color:var(--muted);margin-top:2px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+
+/* FORMS */
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.fg label{font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.fg input,.fg select,.fg textarea{padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r2);font-size:.88rem;background:#fff;color:var(--ink);transition:border .2s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--navy)}
+.fg textarea{resize:vertical;min-height:60px}
+.fg .hint{font-size:.73rem;color:var(--muted);margin-top:2px;font-style:italic}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.span2{grid-column:span 2}
+@media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr!important}.span2{grid-column:span 1!important}}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:var(--r2);border:none;cursor:pointer;font-size:.84rem;font-weight:600;transition:all .15s;line-height:1.2;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.bn{background:var(--navy);color:#fff}.bn:hover{background:var(--navy2)}
+.bg{background:var(--green);color:#fff}.bg:hover{background:#145e38}
+.br{background:var(--red);color:#fff}.br:hover{background:#a93226}
+.bb{background:var(--blue);color:#fff}.bb:hover{background:#174d8a}
+.bgold{background:var(--gold);color:#fff}.bgold:hover{background:#b8852e}
+.bout{background:transparent;border:1.5px solid var(--navy);color:var(--navy)}.bout:hover{background:var(--navy);color:#fff}
+.bgh{background:transparent;border:1.5px solid var(--border);color:var(--muted)}.bgh:hover{border-color:var(--navy);color:var(--navy)}
+.bsm{padding:5px 11px;font-size:.78rem}
+.bxs{padding:3px 9px;font-size:.73rem;border-radius:6px}
+.brow{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;align-items:center}
+
+/* TABLES */
+.tw{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+thead th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:600;font-size:.76rem;letter-spacing:.03em;white-space:nowrap}
+tbody td{padding:8px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#fafaf8}
+
+/* CHIPS */
+.chip{display:inline-block;padding:2px 8px;border-radius:16px;font-size:.7rem;font-weight:600}
+.cg{background:var(--greenl);color:var(--green)}
+.cr2{background:var(--redl);color:var(--red)}
+.cb{background:var(--bluel);color:var(--blue)}
+.cn{background:#eef0f8;color:var(--navy)}
+.cgold{background:var(--goldl);color:#a06b00}
+
+/* TABS */
+.tabs{display:flex;gap:3px;background:#f0ede8;padding:3px;border-radius:9px;width:fit-content;margin-bottom:16px;flex-wrap:wrap}
+.tab{padding:6px 14px;border-radius:7px;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:.81rem;font-weight:500;color:var(--muted);transition:all .15s}
+.tab.active{background:#fff;color:var(--navy);font-weight:600;box-shadow:0 1px 5px rgba(0,0,0,.1)}
+
+/* ALERTS */
+.alert{padding:10px 13px;border-radius:var(--r2);font-size:.83rem;margin-bottom:12px;border-left:3px solid}
+.ai{background:var(--bluel);color:var(--blue);border-color:var(--blue)}
+.as{background:var(--greenl);color:var(--green);border-color:var(--green)}
+.ae{background:var(--redl);color:var(--red);border-color:var(--red)}
+.aw{background:var(--goldl);color:#a06b00;border-color:var(--gold)}
+
+/* SOC CARDS */
+.sc{background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:15px 18px;margin-bottom:9px;display:flex;align-items:center;gap:13px;transition:box-shadow .2s,transform .15s;cursor:pointer}
+.sc:hover{box-shadow:var(--sh);transform:translateY(-1px)}
+.sc-ico{width:42px;height:42px;background:var(--navy);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.sc-info{flex:1}
+.sc-name{font-weight:700;color:var(--navy);font-size:.94rem}
+.sc-meta{font-size:.74rem;color:var(--muted);margin-top:2px}
+
+/* MODAL */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;align-items:center;justify-content:center;padding:16px}
+.mbg.open{display:flex}
+.mbox{background:#fff;border-radius:15px;padding:28px 26px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(26,39,68,.2);animation:pi .2s ease;position:relative}
+.mbox.wide{max-width:780px}
+.mbox h3{font-size:1.15rem;color:var(--navy);margin-bottom:16px;padding-right:24px}
+.mclose{position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);padding:3px;line-height:1}
+.mclose:hover{color:var(--red)}
+
+/* FILTER BAR */
+.fbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;background:#fff;border:1px solid var(--border);border-radius:var(--r2);padding:10px 12px}
+.fbar input,.fbar select{padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:.82rem;font-family:inherit;min-width:100px;flex:1}
+.fbar input:focus,.fbar select:focus{outline:none;border-color:var(--navy)}
+
+/* LEDGER */
+.lhead{background:var(--navy);color:#fff;padding:14px 18px;border-radius:var(--r) var(--r) 0 0}
+.lhead h3{color:#fff;font-size:1rem;margin-bottom:2px}
+.lhead p{font-size:.74rem;opacity:.7}
+.lfoot{background:var(--goldl);padding:12px 18px;border-radius:0 0 var(--r) var(--r);display:flex;gap:20px;flex-wrap:wrap}
+.lf{font-size:.82rem;color:var(--navy)}.lf strong{font-size:.94rem}
+
+/* DROP ZONE */
+.dz{border:2px dashed var(--border);border-radius:var(--r);padding:22px;text-align:center;cursor:pointer;transition:all .2s;color:var(--muted)}
+.dz:hover,.dz.over{border-color:var(--navy);background:#fafaf8;color:var(--navy)}
+.dz input{display:none}
+
+/* BILL CARD */
+.bc{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.bch{background:var(--navy);color:#fff;padding:13px 16px}
+.bch .bflat{font-size:.7rem;opacity:.7;text-transform:uppercase;letter-spacing:.05em}
+.bch .bfno{font-size:1rem;font-family:'Playfair Display',serif;margin-top:2px}
+.bch .bname{font-size:.8rem;opacity:.85;margin-top:1px}
+.bcb{padding:14px 16px}
+.bl{display:flex;justify-content:space-between;padding:4px 0;font-size:.82rem;border-bottom:1px dashed var(--border)}
+.bl:last-child{border-bottom:none}
+.bl.tot{font-weight:700;font-size:.94rem;color:var(--navy);border-top:2px solid var(--navy);border-bottom:none;padding:7px 0;margin-top:4px}
+.bpaid{background:var(--greenl);border:1px solid var(--green);border-radius:6px;padding:6px 9px;margin-top:8px;font-size:.76rem;color:var(--green);font-weight:600}
+.bdue{background:var(--redl);border:1px solid #f5c6c2;border-radius:6px;padding:6px 9px;margin-top:8px;font-size:.76rem;color:var(--red);font-weight:600}
+.bcf{padding:9px 15px;border-top:1px solid var(--border);display:flex;gap:6px;background:#fafaf8;flex-wrap:wrap}
+
+.empty{text-align:center;padding:36px 16px;color:var(--muted);font-style:italic;font-size:.88rem}
+.tag{display:inline-block;background:var(--goldl);color:var(--navy);padding:1px 7px;border-radius:4px;font-size:.7rem;font-weight:600}
+
+/* CASHBOOK / BANKBOOK */
+.book-bal{background:var(--navy);color:#fff;border-radius:var(--r);padding:16px 20px;margin-bottom:14px;display:flex;gap:24px;flex-wrap:wrap}
+.book-bal .bv{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700}
+.book-bal .bl2{font-size:.74rem;opacity:.7;margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+
+@media(max-width:768px){
+  #sidebar{position:fixed;left:-260px;top:54px;height:calc(100vh - 54px);z-index:200}
+  #sidebar.open{left:0;box-shadow:4px 0 20px rgba(0,0,0,.2)}
+  .mob-menu{display:block!important}
+}
 </style>
 </head>
 <body>
-<div id="loader"><h2>SocietyPro</h2><p>Advanced Accounting</p><div class="lbar"><div></div></div></div>
-<div id="pgLogin"><div class="lcard"><h1>Society<span style="color:var(--gold)">Pro</span></h1><p class="sub">Superadmin Login</p>
-<div class="fg"><label>Email</label><input type="email" id="lEmail" placeholder="companyadmin@gmail.com"></div>
-<div class="fg"><label>Password</label><input type="password" id="lPass" placeholder="password" onkeydown="if(event.key==='Enter')doLogin()"></div>
-<div class="lerr" id="lErr"></div><button class="btn bn" style="width:100%;justify-content:center;padding:11px" onclick="doLogin()">Login →</button></div></div>
 
+<!-- LOADER -->
+<div id="loader">
+  <h2>SocietyPro</h2>
+  <p>Accounting Software · Loading…</p>
+  <div class="lbar"><div></div></div>
+</div>
+
+<!-- LOGIN -->
+<div id="pgLogin">
+  <div class="lcard">
+    <h1>Society<span style="color:var(--gold)">Pro</span></h1>
+    <p class="sub">Accounting Software · Admin Login</p>
+    <div class="fg"><label>Email</label><input type="email" id="lEmail" placeholder="admin@email.com" autocomplete="username"></div>
+    <div class="fg"><label>Password</label><input type="password" id="lPass" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="lerr" id="lErr"></div>
+    <button class="btn bn" style="width:100%;justify-content:center;padding:11px;margin-top:6px" id="lBtn" onclick="doLogin()">Login →</button>
+  </div>
+</div>
+
+<!-- APP -->
 <div id="app">
-<div id="topbar"><button class="mob-menu" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-<div class="tb-logo">Society<span>Pro</span></div><div class="tb-soc" id="tbSoc">Dashboard</div>
-<div class="tb-right"><button class="tb-btn" id="tbBack" style="display:none" onclick="goBackToAdmin()">← Back</button><button class="tb-btn" onclick="doLogout()">Logout</button></div></div>
-<div id="bodyWrap">
-<div id="sidebar"><div id="navAdmin"><div class="ns">Main</div><div class="ni" onclick="show('dashboard')" data-p="dashboard">🏠 Dashboard</div>
-<div class="ns">Societies</div><div class="ni" onclick="show('societies')" data-p="societies">🏢 All Societies</div>
-<div class="ni" onclick="show('createSoc')" data-p="createSoc">➕ Create Society</div></div>
-<div id="navSoc" style="display:none"><div class="ns">Overview</div><div class="ni" onclick="show('socDash')" data-p="socDash">🏠 Dashboard</div>
-<div class="ns">Accounts</div><div class="ni" onclick="show('members')" data-p="members">👥 Members</div>
-<div class="ni" onclick="show('receipts')" data-p="receipts">💰 Receipts</div>
-<div class="ni" onclick="show('expenses')" data-p="expenses">💸 Expenses</div>
-<div class="ni" onclick="show('heads')" data-p="heads">🏷️ Heads</div>
-<div class="ns">Reports</div><div class="ni" onclick="show('cashbook')" data-p="cashbook">💵 Cash Book</div>
-<div class="ni" onclick="show('bankbook')" data-p="bankbook">🏦 Bank Book</div>
-<div class="ni" onclick="show('headLedger')" data-p="headLedger">📊 Head Ledger</div>
-<div class="ni" onclick="show('bills')" data-p="bills">🧾 Generate Bills</div>
-<div class="ni" onclick="show('ledger')" data-p="ledger">📒 Member Ledger</div>
-</div></div>
-<div id="main">
-<!-- ADMIN DASH -->
-<div class="panel" id="panel-dashboard"><div class="ph"><h2 class="pt">Dashboard</h2></div><div class="stats" id="admStats"></div><div class="card"><div class="ct">🏢 All Societies</div><div id="admSocList"></div></div></div>
-<!-- SOC LIST -->
-<div class="panel" id="panel-societies"><div class="ph"><h2 class="pt">Societies</h2><button class="btn bn bsm" onclick="show('createSoc')">➕ Create</button></div><div id="socListFull"></div></div>
-<!-- CREATE SOCIETY -->
-<div class="panel" id="panel-createSoc"><div class="ph"><h2 class="pt">Create Society</h2></div>
-<div class="card"><div class="ct">🏢 Basic Info</div><div class="grid2">
-<div class="fg"><label>Society Name *</label><input type="text" id="csName"></div>
-<div class="fg"><label>Registration No.</label><input type="text" id="csReg"></div>
-<div class="fg span2"><label>Address *</label><input type="text" id="csAddr"></div>
-<div class="fg"><label>City</label><input type="text" id="csCity"></div>
-<div class="fg"><label>Pincode</label><input type="text" id="csPin"></div>
-<div class="fg"><label>Financial Year Start Month</label><select id="csFY"><option value="4">April</option><option value="1">January</option><option value="7">July</option></select></div>
-<div class="fg"><label>Society Start Date *</label><input type="date" id="csDate"></div>
-<div class="fg"><label>Total Flats *</label><input type="number" id="csFlats"></div>
-<div class="fg"><label>Default Maintenance (₹/month) *</label><input type="number" id="csMaint"></div>
-<div class="fg"><label>Sinking Fund (₹/month)</label><input type="number" id="csSink"></div>
-<div class="fg"><label>Grace Period (days)</label><input type="number" id="csGrace" value="10"></div>
-<div class="fg"><label>Late Interest % per month</label><input type="number" id="csInterest" step="0.1" value="0"></div>
-</div></div>
-<div class="card"><div class="ct">👥 Office Bearers</div><div class="grid2">
-<div class="fg"><label>Secretary Name</label><input type="text" id="csSec"></div>
-<div class="fg"><label>Chairman Name</label><input type="text" id="csChair"></div>
-<div class="fg"><label>Treasurer Name</label><input type="text" id="csTreas"></div>
-<div class="fg"><label>Contact Phone</label><input type="text" id="csPhone"></div>
-</div></div>
-<div class="card"><div class="ct">🏦 Bank Details</div><div class="grid2">
-<div class="fg"><label>Bank Name</label><input type="text" id="csBank"></div>
-<div class="fg"><label>Account Number</label><input type="text" id="csAcNo"></div>
-<div class="fg"><label>IFSC</label><input type="text" id="csIFSC"></div></div></div>
-<div class="brow"><button class="btn bn" onclick="createSociety()">✔ Create Society</button><button class="btn bgh" onclick="show('societies')">Cancel</button></div></div>
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <button class="mob-menu" onclick="toggleSidebar()">☰</button>
+    <div class="tb-logo">Society<span>Pro</span></div>
+    <div class="tb-soc" id="tbSoc">Dashboard</div>
+    <div class="tb-right">
+      <span class="tb-fy" id="tbFY" style="display:none"></span>
+      <button class="tb-btn" id="tbBack" style="display:none" onclick="goBackToAdmin()">← All Societies</button>
+      <button class="tb-btn" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
 
-<!-- SOCIETY DASHBOARD -->
-<div class="panel" id="panel-socDash"><div class="ph"><h2 class="pt" id="sdTitle">Society Dashboard</h2><button class="btn bgold bsm" onclick="openFyModal()">📅 Manage Financial Years</button></div>
-<div class="stats" id="sdStats"></div><div class="card"><div class="ct">💰 Recent Receipts</div><div id="sdRecents"></div></div></div>
+  <div id="bodyWrap">
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div id="navAdmin">
+        <div class="ns">Main</div>
+        <div class="ni" onclick="show('dashboard')" data-p="dashboard"><span class="ic">🏠</span> Dashboard</div>
+        <div class="ns">Societies</div>
+        <div class="ni" onclick="show('societies')" data-p="societies"><span class="ic">🏢</span> All Societies</div>
+        <div class="ni" onclick="show('createSoc')" data-p="createSoc"><span class="ic">➕</span> Create Society</div>
+      </div>
+      <div id="navSoc" style="display:none">
+        <div class="ns">Overview</div>
+        <div class="ni" onclick="show('socDash')" data-p="socDash"><span class="ic">🏠</span> Dashboard</div>
+        <div class="ns">Members</div>
+        <div class="ni" onclick="show('members')" data-p="members"><span class="ic">👥</span> Members</div>
+        <div class="ns">Transactions</div>
+        <div class="ni" onclick="show('receipts')" data-p="receipts"><span class="ic">💰</span> Receipts</div>
+        <div class="ni" onclick="show('payments')" data-p="payments"><span class="ic">💸</span> Payments</div>
+        <div class="ns">Books</div>
+        <div class="ni" onclick="show('cashbook')" data-p="cashbook"><span class="ic">💵</span> Cash Book</div>
+        <div class="ni" onclick="show('bankbook')" data-p="bankbook"><span class="ic">🏦</span> Bank Book</div>
+        <div class="ns">Reports</div>
+        <div class="ni" onclick="show('ledger')" data-p="ledger"><span class="ic">📒</span> Member Ledger</div>
+        <div class="ni" onclick="show('headLedger')" data-p="headLedger"><span class="ic">📊</span> Head Ledger</div>
+        <div class="ns">Billing</div>
+        <div class="ni" onclick="show('bills')" data-p="bills"><span class="ic">🧾</span> Generate Bills</div>
+        <div class="ns">Settings</div>
+        <div class="ni" onclick="show('expHeads')" data-p="expHeads"><span class="ic">⚙️</span> Expense Heads</div>
+      </div>
+    </div>
 
-<!-- MEMBERS -->
-<div class="panel" id="panel-members"><div class="ph"><h2 class="pt">Members</h2></div>
-<div class="card"><div class="tabs"><button class="tab active" onclick="setTab('m','list')">📋 List</button><button class="tab" onclick="setTab('m','add')">➕ Add</button></div>
-<div id="mv-list"><div class="tw"><table><thead><tr><th>Flat</th><th>Name</th><th>Phone</th><th>Type</th><th>Status</th><th>Maint</th><th>Op Bal</th><th>Action</th></tr></thead><tbody id="memTbody"></tbody></table></div><button class="btn bg bsm mt-2" onclick="exportMembers()">⬇ Export Excel</button></div>
-<div id="mv-add" style="display:none"><div class="grid2"><div class="fg"><label>Flat No.*</label><input id="mbFlat"></div><div class="fg"><label>Owner Name*</label><input id="mbName"></div>
-<div class="fg"><label>Phone*</label><input id="mbPhone"></div><div class="fg"><label>Email</label><input id="mbEmail"></div>
-<div class="fg"><label>Member Type</label><select id="mbType"><option>Owner</option><option>Tenant</option></select></div>
-<div class="fg"><label>Status</label><select id="mbStatus"><option>Active</option><option>Inactive</option></select></div>
-<div class="fg"><label>Opening Balance (₹)</label><input type="number" id="mbOpBal" value="0"></div>
-<div class="fg"><label>Op Bal Type</label><select id="mbOpType"><option value="Dr">Dr (Owes)</option><option value="Cr">Cr (Advance)</option></select></div>
-<div class="fg"><label>Custom Maintenance (₹)</label><input type="number" id="mbMaint"></div></div><div class="brow"><button class="btn bn" onclick="saveMember()">Save</button><button class="btn bgh" onclick="setTab('m','list')">Cancel</button></div></div></div></div>
+    <!-- MAIN CONTENT -->
+    <div id="main">
 
-<!-- RECEIPTS (INCOME) -->
-<div class="panel" id="panel-receipts"><div class="ph"><h2 class="pt">Receipts</h2><button class="btn bg bsm" onclick="exportReceiptsWithFilter()">📎 Export (Date Range)</button></div>
-<div class="card"><div class="grid2" style="max-width:400px;margin-bottom:12px"><div class="fg"><label>From Date</label><input type="date" id="recExpFrom"></div><div class="fg"><label>To Date</label><input type="date" id="recExpTo"></div></div>
-<div class="tabs"><button class="tab active" onclick="setTab('r','list')">📋 List</button><button class="tab" onclick="setTab('r','add')">➕ Add</button><button class="tab" onclick="setTab('r','import')">📥 Import Excel</button></div>
-<div id="rv-list"><div class="tw"><table><thead><tr><th>Date</th><th>Flat</th><th>Head</th><th>Mode</th><th>Amount</th><th>Action</th></tr></thead><tbody id="recTbody"></tbody></table></div></div>
-<div id="rv-add" style="display:none"><div class="grid2"><div class="fg"><label>Date*</label><input type="date" id="rDate"></div><div class="fg"><label>Flat*</label><select id="rFlat" onchange="showMemberOutstanding()"></select></div>
-<div class="fg"><label>Head*</label><select id="rHeadSelect"></select></div><div class="fg"><label>Amount*</label><input type="number" id="rAmt"></div>
-<div class="fg"><label>Mode*</label><select id="rMode" onchange="toggleChqField('rMode','rChqWrap')"><option>Cash</option><option>Cheque</option><option>UPI</option><option>NEFT</option></select></div>
-<div class="fg" id="rChqWrap" style="display:none"><label>Cheque/UTR</label><input id="rChqNo"></div>
-<div class="fg span2"><label>Narration</label><textarea id="rNarr"></textarea></div><div class="fg" id="outstandingInfo" style="background:#f5f3ef;padding:8px;border-radius:6px"><span>Opening/Due info will appear</span></div></div>
-<div class="brow"><button class="btn bn" onclick="saveReceipt()">Save Receipt</button><button class="btn bgh" onclick="setTab('r','list')">Cancel</button></div></div>
-<div id="rv-import" style="display:none"><div class="alert ai">Upload excel with columns: Date, FlatNo, Head, Amount, Mode, ChequeNo, Narration (any order)</div>
-<div class="dz" onclick="document.getElementById('recXL').click()"><div>📤 Click to upload</div><input type="file" id="recXL" accept=".xlsx" onchange="previewReceiptImport()"></div>
-<div id="recImportMap"></div><div id="recImportBtn" style="display:none"><button class="btn bn" onclick="importReceiptExcel()">Import</button></div></div></div></div>
+      <!-- ══════════════ ADMIN DASHBOARD ══════════════ -->
+      <div class="panel" id="panel-dashboard">
+        <div class="ph"><h2 class="pt">Dashboard<small>Welcome to SocietyPro</small></h2></div>
+        <div class="stats" id="admStats"></div>
+        <div class="card">
+          <div class="ct">🏢 Your Societies</div>
+          <div id="admSocList"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
 
-<!-- EXPENSES -->
-<div class="panel" id="panel-expenses"><div class="ph"><h2 class="pt">Expenses</h2><button class="btn bg bsm" onclick="exportExpenses()">📎 Export</button></div>
-<div class="card"><div class="tabs"><button class="tab active" onclick="setTab('e','list')">📋 List</button><button class="tab" onclick="setTab('e','add')">➕ Add Expense</button><button class="tab" onclick="setTab('e','import')">📥 Import</button></div>
-<div id="ev-list"><div class="tw"><table><thead><tr><th>Date</th><th>Head</th><th>Mode</th><th>Amount</th><th>Narration</th><th>Del</th></tr></thead><tbody id="expTbody"></tbody></table></div></div>
-<div id="ev-add" style="display:none"><div class="grid2"><div class="fg"><label>Date*</label><input type="date" id="expDate"></div><div class="fg"><label>Expense Head*</label><select id="expHead"></select></div>
-<div class="fg"><label>Amount*</label><input type="number" id="expAmt"></div><div class="fg"><label>Mode*</label><select id="expMode" onchange="toggleChqField('expMode','expChqWrap')"><option>Cash</option><option>Cheque</option><option>Bank Transfer</option></select></div>
-<div class="fg" id="expChqWrap" style="display:none"><label>Ref No.</label><input id="expRef"></div>
-<div class="fg span2"><label>Narration</label><textarea id="expNarr"></textarea></div></div><button class="btn bn" onclick="saveExpense()">Save Expense</button></div>
-<div id="ev-import" style="display:none"><div class="dz" onclick="document.getElementById('expXL').click()"><div>Upload Expense Excel</div><input type="file" id="expXL" accept=".xlsx" onchange="importExpenseExcel()"></div></div></div></div>
+      <!-- ══════════════ ALL SOCIETIES ══════════════ -->
+      <div class="panel" id="panel-societies">
+        <div class="ph">
+          <h2 class="pt">Societies<small>All registered societies</small></h2>
+          <button class="btn bn bsm" onclick="show('createSoc')">➕ Create New</button>
+        </div>
+        <div id="socListFull"><div class="empty">Loading…</div></div>
+      </div>
 
-<!-- HEADS MANAGEMENT -->
-<div class="panel" id="panel-heads"><div class="ph"><h2 class="pt">Income & Expense Heads</h2><button class="btn bn" onclick="showAddHeadModal()">➕ Add New Head</button></div>
-<div class="card"><h3>Income Heads</h3><div id="incomeHeadsList"></div><h3>Expense Heads</h3><div id="expenseHeadsList"></div></div></div>
+      <!-- ══════════════ CREATE SOCIETY ══════════════ -->
+      <div class="panel" id="panel-createSoc">
+        <div class="ph"><h2 class="pt">Create Society<small>Fill all details carefully</small></h2></div>
+        <div class="card">
+          <div class="ct">🏢 Basic Info</div>
+          <div class="grid2">
+            <div class="fg"><label>Society Name *</label><input type="text" id="csName" placeholder="e.g. Sunrise Apartments"></div>
+            <div class="fg"><label>Registration No.</label><input type="text" id="csReg" placeholder="SRA/2024/001"></div>
+            <div class="fg span2"><label>Full Address *</label><input type="text" id="csAddr" placeholder="Plot, Street, Area, City, State"></div>
+            <div class="fg"><label>City</label><input type="text" id="csCity" placeholder="City"></div>
+            <div class="fg"><label>Pincode</label><input type="text" id="csPin" placeholder="400001"></div>
+            <div class="fg"><label>Secretary Name *</label><input type="text" id="csSecretary" placeholder="Full name"></div>
+            <div class="fg"><label>Chairman Name</label><input type="text" id="csChairman" placeholder="Full name"></div>
+            <div class="fg"><label>Treasurer Name</label><input type="text" id="csTreasurer" placeholder="Full name"></div>
+            <div class="fg"><label>Contact Phone</label><input type="text" id="csPhone" placeholder="10-digit mobile"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">💰 Financial Setup</div>
+          <div class="grid2">
+            <div class="fg"><label>Financial Year Start *</label>
+              <select id="csFY">
+                <option value="4">April (Standard India)</option>
+                <option value="1">January</option>
+                <option value="7">July</option>
+              </select>
+            </div>
+            <div class="fg"><label>Society Start Date *</label><input type="date" id="csDate"></div>
+            <div class="fg"><label>Total Flats *</label><input type="number" id="csFlats" placeholder="e.g. 24" min="1"></div>
+            <div class="fg"><label>Default Maintenance (₹/month) *</label><input type="number" id="csMaint" placeholder="e.g. 1500"></div>
+            <div class="fg"><label>Sinking Fund (₹/month)</label><input type="number" id="csSink" placeholder="e.g. 200"></div>
+            <div class="fg"><label>Repair Fund (₹/month)</label><input type="number" id="csRepair" placeholder="e.g. 100"></div>
+            <div class="fg"><label>Grace Period (days)</label><input type="number" id="csGrace" placeholder="10" value="10"></div>
+            <div class="fg"><label>Interest on Late Payment (% per month)</label><input type="number" id="csInterest" placeholder="e.g. 2" step="0.1" value="0"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">🏦 Bank Details</div>
+          <div class="grid2">
+            <div class="fg"><label>Bank Name</label><input type="text" id="csBank" placeholder="e.g. SBI"></div>
+            <div class="fg"><label>Account Number</label><input type="text" id="csAcNo" placeholder="Account number"></div>
+            <div class="fg"><label>IFSC Code</label><input type="text" id="csIFSC" placeholder="e.g. SBIN0001234"></div>
+            <div class="fg"><label>Branch</label><input type="text" id="csBranch" placeholder="Branch name"></div>
+          </div>
+        </div>
+        <div class="brow">
+          <button class="btn bn" onclick="saveSociety()">✅ Create Society</button>
+          <button class="btn bgh" onclick="show('societies')">Cancel</button>
+        </div>
+      </div>
 
-<!-- CASH / BANK BOOK & HEAD LEDGER & BILLS & LEDGER - simplified but fully functional -->
-<div class="panel" id="panel-cashbook"><div class="ph"><h2 class="pt">Cash Book</h2><button class="btn bg" onclick="exportBookFilter('cash')">Export</button></div><div class="card"><div class="grid2"><div class="fg"><label>From</label><input type="date" id="cbFrom"></div><div class="fg"><label>To</label><input type="date" id="cbTo"></div></div><button class="btn bn" onclick="loadBook('cash')">Load</button><div class="tw"><table><thead><tr><th>Date</th><th>Flat</th><th>Head</th><th>Amount</th></tr></thead><tbody id="cashTbody"></tbody></table></div></div></div>
-<div class="panel" id="panel-bankbook"><div class="ph"><h2 class="pt">Bank Book</h2><button class="btn bg" onclick="exportBookFilter('bank')">Export</button></div><div class="card"><div class="grid2"><div class="fg"><label>From</label><input type="date" id="bbFrom"></div><div class="fg"><label>To</label><input type="date" id="bbTo"></div></div><button class="btn bn" onclick="loadBook('bank')">Load</button><div class="tw"><table><thead><tr><th>Date</th><th>Flat</th><th>Head</th><th>Amount</th></tr></thead><tbody id="bankTbody"></tbody></table></div></div></div>
-<div class="panel" id="panel-headLedger"><div class="ph"><h2 class="pt">Head Ledger</h2></div><div class="card"><div class="grid2"><div class="fg"><label>Select Head</label><select id="hlHead"></select></div><div class="fg"><label>From</label><input type="date" id="hlFrom"></div><div class="fg"><label>To</label><input type="date" id="hlTo"></div></div><button class="btn bn" onclick="loadHeadLedger()">Show</button><div id="headLedgerResult"></div></div></div>
-<div class="panel" id="panel-bills"><div class="ph"><h2 class="pt">Generate Bills</h2></div><div class="card"><div class="grid2"><div class="fg"><label>Bill Month (1st of month)</label><input type="month" id="billMonth"></div><div class="fg"><label>Due Date</label><input type="date" id="billDue"></div></div><button class="btn bn" onclick="previewBills()">Preview Bills</button><div id="billsPreviewArea"></div></div></div>
-<div class="panel" id="panel-ledger"><div class="ph"><h2 class="pt">Member Ledger</h2></div><div class="card"><div class="grid2"><div class="fg"><label>Member</label><select id="ledFlat" onchange="loadLedger()"></select></div><div class="fg"><label>Period</label><select id="ledPeriod" onchange="toggleLedgerMonth()"><option value="all">All</option><option value="fy">Current FY</option><option value="month">Specific Month</option></select></div><div class="fg" id="ledMonthWrap" style="display:none"><label>Month</label><input type="month" id="ledMonth" onchange="loadLedger()"></div></div><div id="ledgerArea"></div></div></div>
-</div></div></div>
+      <!-- ══════════════ SOCIETY DASHBOARD ══════════════ -->
+      <div class="panel" id="panel-socDash">
+        <div class="ph">
+          <h2 class="pt" id="sdTitle">Society Dashboard<small>Overview</small></h2>
+        </div>
+        <div class="stats" id="sdStats"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card">
+            <div class="ct">💰 Recent Receipts</div>
+            <div id="sdRecReceipts"><div class="empty">Loading…</div></div>
+          </div>
+          <div class="card">
+            <div class="ct">💸 Recent Payments</div>
+            <div id="sdRecPayments"><div class="empty">Loading…</div></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:0">
+          <div class="ct">⚠️ Defaulters (Members with dues)</div>
+          <div id="sdDefaulters"><div class="empty">Loading…</div></div>
+        </div>
+      </div>
 
-<!-- FY Modal -->
-<div id="fyModal" class="mbg"><div class="mbox"><h3>Financial Years</h3><div id="fyList"></div><div class="fg"><label>New FY (e.g., 2024-25)</label><input type="text" id="newFyName" placeholder="2024-2025"></div><button class="btn bn" onclick="addFinancialYear()">Add Year</button><button class="btn bgh" onclick="closeFyModal()">Close</button></div></div>
+      <!-- ══════════════ MEMBERS ══════════════ -->
+      <div class="panel" id="panel-members">
+        <div class="ph">
+          <h2 class="pt">Members<small>All flat members</small></h2>
+          <div class="brow" style="margin:0">
+            <button class="btn bn bsm" onclick="openAddMember()">➕ Add Member</button>
+            <button class="btn bg bsm" onclick="exportMembersXL()">⬇ Excel</button>
+          </div>
+        </div>
+        <div class="fbar">
+          <input type="text" id="memSearch" placeholder="🔍 Search by name / flat..." oninput="loadMembers()">
+          <select id="memTypeFilter" onchange="loadMembers()">
+            <option value="">All Types</option>
+            <option value="Owner">Owner</option>
+            <option value="Tenant">Tenant</option>
+          </select>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Flat No.</th><th>Name</th><th>Type</th><th>Phone</th><th>Email</th><th>Maint. (₹)</th><th>Op. Balance</th><th>Actions</th></tr></thead>
+          <tbody id="memTbody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+        </table></div>
+      </div>
+
+      <!-- ══════════════ RECEIPTS ══════════════ -->
+      <div class="panel" id="panel-receipts">
+        <div class="ph">
+          <h2 class="pt">Receipts<small>Money received from members</small></h2>
+          <div class="brow" style="margin:0">
+            <button class="btn bn bsm" onclick="openAddReceipt()">➕ Add Receipt</button>
+            <button class="btn bg bsm" onclick="exportReceiptsXL()">⬇ Export Excel</button>
+            <button class="btn bb bsm" onclick="document.getElementById('importRecFile').click()">⬆ Import Excel</button>
+            <input type="file" id="importRecFile" style="display:none" accept=".xlsx,.xls,.csv" onchange="importReceiptsXL(this)">
+          </div>
+        </div>
+        <div class="fbar">
+          <input type="text" id="recSearch" placeholder="🔍 Search flat / narration..." oninput="loadReceipts()">
+          <select id="recModeFilter" onchange="loadReceipts()">
+            <option value="">All Modes</option>
+            <option value="Cash">Cash</option>
+            <option value="Bank">Bank/UPI</option>
+            <option value="Cheque">Cheque</option>
+          </select>
+          <input type="month" id="recMonthFilter" onchange="loadReceipts()" title="Filter by month">
+          <input type="date" id="recFrom" onchange="loadReceipts()" placeholder="From">
+          <input type="date" id="recTo" onchange="loadReceipts()" placeholder="To">
+          <button class="btn bgh bsm" onclick="clearRecFilters()">✕ Clear</button>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Date</th><th>Flat No.</th><th>Member</th><th>Head</th><th>Amount (₹)</th><th>Mode</th><th>Cheque/Ref</th><th>Narration</th><th>Actions</th></tr></thead>
+          <tbody id="recTbody"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
+        </table></div>
+        <div id="recSummary" style="margin-top:10px"></div>
+      </div>
+
+      <!-- ══════════════ PAYMENTS ══════════════ -->
+      <div class="panel" id="panel-payments">
+        <div class="ph">
+          <h2 class="pt">Payments<small>Expenses / Money paid out</small></h2>
+          <div class="brow" style="margin:0">
+            <button class="btn bn bsm" onclick="openAddPayment()">➕ Add Payment</button>
+            <button class="btn bg bsm" onclick="exportPaymentsXL()">⬇ Export Excel</button>
+            <button class="btn bb bsm" onclick="document.getElementById('importPayFile').click()">⬆ Import Excel</button>
+            <input type="file" id="importPayFile" style="display:none" accept=".xlsx,.xls,.csv" onchange="importPaymentsXL(this)">
+          </div>
+        </div>
+        <div class="fbar">
+          <input type="text" id="paySearch" placeholder="🔍 Search head / narration..." oninput="loadPayments()">
+          <select id="payModeFilter" onchange="loadPayments()">
+            <option value="">All Modes</option>
+            <option value="Cash">Cash</option>
+            <option value="Bank">Bank/UPI</option>
+            <option value="Cheque">Cheque</option>
+          </select>
+          <select id="payHeadFilter" onchange="loadPayments()">
+            <option value="">All Heads</option>
+          </select>
+          <input type="month" id="payMonthFilter" onchange="loadPayments()">
+          <button class="btn bgh bsm" onclick="clearPayFilters()">✕ Clear</button>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Date</th><th>Head</th><th>Amount (₹)</th><th>Mode</th><th>Cheque/Ref</th><th>Narration</th><th>Actions</th></tr></thead>
+          <tbody id="payTbody"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+        </table></div>
+        <div id="paySummary" style="margin-top:10px"></div>
+      </div>
+
+      <!-- ══════════════ CASH BOOK ══════════════ -->
+      <div class="panel" id="panel-cashbook">
+        <div class="ph">
+          <h2 class="pt">Cash Book<small>All cash transactions</small></h2>
+          <div class="brow" style="margin:0">
+            <button class="btn bg bsm" onclick="exportBookXL('cash')">⬇ Export Excel</button>
+          </div>
+        </div>
+        <div class="fbar">
+          <input type="month" id="cbMonth" onchange="loadCashBook()">
+          <button class="btn bn bsm" onclick="loadCashBook()">Load</button>
+          <button class="btn bgh bsm" onclick="document.getElementById('cbMonth').value='';loadCashBook()">All Time</button>
+        </div>
+        <div id="cbBal"></div>
+        <div class="tw"><table>
+          <thead><tr><th>Date</th><th>Particulars</th><th>Type</th><th>Receipt (₹)</th><th>Payment (₹)</th><th>Balance (₹)</th></tr></thead>
+          <tbody id="cbTbody"><tr><td colspan="6" class="empty">Select period and click Load</td></tr></tbody>
+        </table></div>
+      </div>
+
+      <!-- ══════════════ BANK BOOK ══════════════ -->
+      <div class="panel" id="panel-bankbook">
+        <div class="ph">
+          <h2 class="pt">Bank Book<small>All bank / UPI / cheque transactions</small></h2>
+          <div class="brow" style="margin:0">
+            <button class="btn bg bsm" onclick="exportBookXL('bank')">⬇ Export Excel</button>
+          </div>
+        </div>
+        <div class="fbar">
+          <input type="month" id="bbMonth" onchange="loadBankBook()">
+          <button class="btn bn bsm" onclick="loadBankBook()">Load</button>
+          <button class="btn bgh bsm" onclick="document.getElementById('bbMonth').value='';loadBankBook()">All Time</button>
+        </div>
+        <div id="bbBal"></div>
+        <div class="tw"><table>
+          <thead><tr><th>Date</th><th>Particulars</th><th>Type</th><th>Receipt (₹)</th><th>Payment (₹)</th><th>Balance (₹)</th></tr></thead>
+          <tbody id="bbTbody"><tr><td colspan="6" class="empty">Select period and click Load</td></tr></tbody>
+        </table></div>
+      </div>
+
+      <!-- ══════════════ MEMBER LEDGER ══════════════ -->
+      <div class="panel" id="panel-ledger">
+        <div class="ph"><h2 class="pt">Member Ledger<small>Individual flat account statement</small></h2></div>
+        <div class="card">
+          <div class="grid3">
+            <div class="fg"><label>Select Flat *</label>
+              <select id="ledFlat" onchange="loadLedger()">
+                <option value="">-- Select Member --</option>
+              </select>
+            </div>
+            <div class="fg"><label>Period</label>
+              <select id="ledPeriod" onchange="loadLedger()">
+                <option value="fy">Current Financial Year</option>
+                <option value="all">All Time</option>
+                <option value="month">Specific Month</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+            <div class="fg" id="ledMonthWrap" style="display:none"><label>Month</label>
+              <input type="month" id="ledMonth" onchange="loadLedger()">
+            </div>
+          </div>
+          <div id="ledCustomWrap" style="display:none">
+            <div class="grid2">
+              <div class="fg"><label>From Date</label><input type="date" id="ledFrom" onchange="loadLedger()"></div>
+              <div class="fg"><label>To Date</label><input type="date" id="ledTo" onchange="loadLedger()"></div>
+            </div>
+          </div>
+        </div>
+        <div id="ledgerArea"><div class="empty">Select a member to view their ledger.</div></div>
+      </div>
+
+      <!-- ══════════════ HEAD LEDGER ══════════════ -->
+      <div class="panel" id="panel-headLedger">
+        <div class="ph"><h2 class="pt">Head Ledger<small>Expense head account statement</small></h2></div>
+        <div class="card">
+          <div class="grid2">
+            <div class="fg"><label>Select Head *</label>
+              <select id="hlHead" onchange="loadHeadLedger()">
+                <option value="">-- Select Head --</option>
+              </select>
+            </div>
+            <div class="fg"><label>Period</label>
+              <select id="hlPeriod" onchange="loadHeadLedger()">
+                <option value="all">All Time</option>
+                <option value="month">Specific Month</option>
+                <option value="fy">Current Financial Year</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg" id="hlMonthWrap" style="display:none"><label>Month</label>
+            <input type="month" id="hlMonth" onchange="loadHeadLedger()">
+          </div>
+        </div>
+        <div id="headLedgerArea"><div class="empty">Select a head to view its ledger.</div></div>
+      </div>
+
+      <!-- ══════════════ BILLS ══════════════ -->
+      <div class="panel" id="panel-bills">
+        <div class="ph"><h2 class="pt">Generate Bills<small>Monthly maintenance bills</small></h2></div>
+        <div class="card">
+          <div class="grid3">
+            <div class="fg"><label>Bill Date *</label><input type="date" id="billDate"></div>
+            <div class="fg"><label>Bill Month *</label><input type="month" id="billMonth"></div>
+            <div class="fg"><label>Due Date</label><input type="date" id="billDue"></div>
+          </div>
+          <div class="fg"><label>Note / Message (optional)</label><input type="text" id="billNote" placeholder="e.g. Please pay before due date to avoid interest"></div>
+          <div class="brow">
+            <button class="btn bn" onclick="generateBills()">👁 View All Bills</button>
+            <button class="btn bg" onclick="genPDFAll()">📄 Generate PDF — All Flats</button>
+            <div class="fg" style="margin:0;flex-direction:row;align-items:center;gap:6px">
+              <select id="billSingleFlat" style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:.83rem;min-width:140px">
+                <option value="">Select Single Flat</option>
+              </select>
+              <button class="btn bgold bsm" onclick="genPDFSingle()">📄 PDF Only This Flat</button>
+            </div>
+          </div>
+        </div>
+        <div id="billsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px;margin-top:6px"></div>
+      </div>
+
+      <!-- ══════════════ EXPENSE HEADS ══════════════ -->
+      <div class="panel" id="panel-expHeads">
+        <div class="ph">
+          <h2 class="pt">Expense Heads<small>Manage income &amp; expense categories</small></h2>
+          <button class="btn bn bsm" onclick="openAddHead()">➕ Add Head</button>
+        </div>
+        <div class="alert ai">💡 Built-in heads (marked with 🔒) cannot be deleted. Add your own custom heads below.</div>
+        <div class="tw"><table>
+          <thead><tr><th>Head Name</th><th>Type</th><th>Description</th><th>Built-in</th><th>Actions</th></tr></thead>
+          <tbody id="headsTbody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+        </table></div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /bodyWrap -->
+</div><!-- /app -->
+
+<!-- ══ MODALS ══ -->
+
+<!-- ADD MEMBER -->
+<div class="mbg" id="mAddMember">
+  <div class="mbox">
+    <button class="mclose" onclick="closeModal('mAddMember')">✕</button>
+    <h3 id="mAddMemberTitle">➕ Add Member</h3>
+    <div class="grid2">
+      <div class="fg"><label>Flat No. *</label><input type="text" id="mFlatNo" placeholder="e.g. 101, A-201"></div>
+      <div class="fg"><label>Member Name *</label><input type="text" id="mName" placeholder="Full name"></div>
+      <div class="fg"><label>Phone No. *</label><input type="tel" id="mPhone" placeholder="10-digit mobile" maxlength="10"></div>
+      <div class="fg"><label>Email *</label><input type="email" id="mEmail" placeholder="member@email.com"></div>
+      <div class="fg"><label>Type *</label>
+        <select id="mType">
+          <option value="Owner">Owner</option>
+          <option value="Tenant">Tenant</option>
+        </select>
+      </div>
+      <div class="fg"><label>Custom Maintenance (₹/month)</label><input type="number" id="mMaint" placeholder="Leave blank for default"></div>
+      <div class="fg"><label>Opening Balance (₹)</label><input type="number" id="mOB" placeholder="0.00" value="0"></div>
+      <div class="fg"><label>Opening Balance Type</label>
+        <select id="mOBType">
+          <option value="Dr">Dr (Member owes society)</option>
+          <option value="Cr">Cr (Society owes member)</option>
+        </select>
+      </div>
+      <div class="fg span2"><label>Address / Notes</label><textarea id="mNotes" placeholder="Flat address or any notes"></textarea></div>
+    </div>
+    <input type="hidden" id="mEditId">
+    <div class="brow">
+      <button class="btn bn" onclick="saveMember()">✅ Save Member</button>
+      <button class="btn bgh" onclick="closeModal('mAddMember')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD RECEIPT -->
+<div class="mbg" id="mAddReceipt">
+  <div class="mbox wide">
+    <button class="mclose" onclick="closeModal('mAddReceipt')">✕</button>
+    <h3 id="mAddReceiptTitle">➕ Add Receipt</h3>
+    <div class="alert ai" id="recObAlert" style="display:none"></div>
+    <div class="grid2">
+      <div class="fg"><label>Date *</label><input type="date" id="rDate"></div>
+      <div class="fg"><label>Flat No. *</label>
+        <select id="rFlat" onchange="onReceiptFlatChange()">
+          <option value="">-- Select Flat --</option>
+        </select>
+      </div>
+      <div class="fg span2"><label>Member Name</label><input type="text" id="rMemberName" placeholder="Auto-filled" readonly style="background:#f8f8f8"></div>
+      <div class="fg"><label>Receipt Head *</label>
+        <select id="rHead">
+          <option value="Maintenance">Maintenance</option>
+          <option value="Sinking Fund">Sinking Fund</option>
+          <option value="Repair Fund">Repair Fund</option>
+          <option value="Water Charges">Water Charges</option>
+          <option value="Parking Charges">Parking Charges</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Amount (₹) *</label><input type="number" id="rAmt" placeholder="0.00"></div>
+      <div class="fg"><label>Mode *</label>
+        <select id="rMode">
+          <option value="Cash">Cash</option>
+          <option value="Bank">Bank Transfer / UPI</option>
+          <option value="Cheque">Cheque</option>
+        </select>
+      </div>
+      <div class="fg"><label>Cheque / Ref No.</label><input type="text" id="rCheque" placeholder="Cheque no. or UPI ref"></div>
+      <div class="fg span2"><label>Narration</label><input type="text" id="rNarr" placeholder="e.g. Maintenance for April 2025"></div>
+    </div>
+    <div class="fg"><label>Current Balance</label>
+      <div id="rBalDisplay" style="padding:9px 12px;background:#f4f6fb;border:1.5px solid var(--border);border-radius:var(--r2);font-weight:600;font-size:.88rem;color:var(--navy)">— Select a flat first —</div>
+    </div>
+    <input type="hidden" id="rEditId">
+    <div class="brow">
+      <button class="btn bn" onclick="saveReceipt()">✅ Save Receipt</button>
+      <button class="btn bgh" onclick="closeModal('mAddReceipt')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PAYMENT -->
+<div class="mbg" id="mAddPayment">
+  <div class="mbox">
+    <button class="mclose" onclick="closeModal('mAddPayment')">✕</button>
+    <h3 id="mAddPaymentTitle">➕ Add Payment</h3>
+    <div class="grid2">
+      <div class="fg"><label>Date *</label><input type="date" id="pDate"></div>
+      <div class="fg"><label>Expense Head *</label>
+        <select id="pHead"></select>
+      </div>
+      <div class="fg"><label>Amount (₹) *</label><input type="number" id="pAmt" placeholder="0.00"></div>
+      <div class="fg"><label>Mode *</label>
+        <select id="pMode">
+          <option value="Cash">Cash</option>
+          <option value="Bank">Bank Transfer / UPI</option>
+          <option value="Cheque">Cheque</option>
+        </select>
+      </div>
+      <div class="fg"><label>Cheque / Ref No.</label><input type="text" id="pCheque" placeholder="Cheque no. or UPI ref"></div>
+      <div class="fg span2"><label>Narration *</label><input type="text" id="pNarr" placeholder="e.g. Electricity bill for common area"></div>
+    </div>
+    <input type="hidden" id="pEditId">
+    <div class="brow">
+      <button class="btn bn" onclick="savePayment()">✅ Save Payment</button>
+      <button class="btn bgh" onclick="closeModal('mAddPayment')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD HEAD -->
+<div class="mbg" id="mAddHead">
+  <div class="mbox">
+    <button class="mclose" onclick="closeModal('mAddHead')">✕</button>
+    <h3>➕ Add Expense Head</h3>
+    <div class="fg"><label>Head Name *</label><input type="text" id="hName" placeholder="e.g. Electricity, Plumbing, Security"></div>
+    <div class="fg"><label>Type *</label>
+      <select id="hType">
+        <option value="Expense">Expense (Payment)</option>
+        <option value="Income">Income (Receipt)</option>
+      </select>
+    </div>
+    <div class="fg"><label>Description</label><textarea id="hDesc" placeholder="Brief description of this head"></textarea></div>
+    <input type="hidden" id="hEditId">
+    <div class="brow">
+      <button class="btn bn" onclick="saveHead()">✅ Save Head</button>
+      <button class="btn bgh" onclick="closeModal('mAddHead')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- FY SELECTOR -->
+<div class="mbg" id="mFYSel">
+  <div class="mbox">
+    <button class="mclose" onclick="closeModal('mFYSel')">✕</button>
+    <h3>📅 Select Financial Year</h3>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">Choose the year you want to work in for <strong id="mFYSocName"></strong></p>
+    <div id="mFYList"></div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <div class="fg"><label>Or create new FY</label>
+        <select id="mFYNew">
+          <option value="">-- Select Year to Add --</option>
+        </select>
+      </div>
+      <button class="btn bn bsm" onclick="addAndSelectFY()">➕ Add &amp; Open Year</button>
+    </div>
+  </div>
+</div>
+
 <script>
-firebase.initializeApp({apiKey:"AIzaSyAoW-ZL7vGSwxRwBDLuh1AAaz4I_Wvuq54",authDomain:"society-accounting-dcfd5.firebaseapp.com",projectId:"society-accounting-dcfd5",storageBucket:"society-accounting-dcfd5.firebasestorage.app",messagingSenderId:"28055105870",appId:"1:28055105870:web:003a92f2387c2872e0ae1f"});
-const db=firebase.firestore(),auth=firebase.auth(); let ST={socId:null,socData:null};
-window.onload=setTimeout(()=>{document.getElementById('loader').style.display='none';document.getElementById('pgLogin').classList.add('show');},1000);
-function doLogin(){const e=document.getElementById('lEmail').value.trim(),p=document.getElementById('lPass').value.trim();if(e!=='companyadmin@gmail.com'){alert('Superadmin only');return;}auth.signInWithEmailAndPassword(e,p).then(()=>{document.getElementById('pgLogin').classList.remove('show');document.getElementById('app').classList.add('show');show('dashboard');}).catch(()=>alert('Invalid credentials'));}
-function doLogout(){auth.signOut();location.reload();}
-function show(id){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.getElementById(`panel-${id}`)?.classList.add('active');if(id==='dashboard')loadAdminDash();if(id==='societies')loadSocList();if(id==='socDash'&&ST.socId)loadSocDash();if(id==='members'){loadMembers();populateFlats();}if(id==='receipts'){loadReceipts();populateFlats();loadHeadsIntoSelect();setDefaultDates();}if(id==='expenses'){loadExpenses();loadExpenseHeadsSelect();}if(id==='heads')loadHeadsList();if(id==='ledger'){populateLedgerSel();loadLedger();}if(id==='headLedger')loadHeadSelector();}
-function setTab(prefix,tab){const maps={m:{list:'mv-list',add:'mv-add'},r:{list:'rv-list',add:'rv-add',import:'rv-import'},e:{list:'ev-list',add:'ev-add',import:'ev-import'}};for(let k in maps[prefix])document.getElementById(maps[prefix][k]).style.display=k===tab?'block':'none';}
-// Society creation
-async function createSociety(){const name=document.getElementById('csName').value;if(!name)return alert('Name required');await db.collection('sp2_societies').add({name,displayName:name,regNo:document.getElementById('csReg').value,address:document.getElementById('csAddr').value,city:document.getElementById('csCity').value,pincode:document.getElementById('csPin').value,fyStart:parseInt(document.getElementById('csFY').value),startDate:document.getElementById('csDate').value,totalFlats:parseInt(document.getElementById('csFlats').value),maintenancePerFlat:parseFloat(document.getElementById('csMaint').value),sinkingFund:parseFloat(document.getElementById('csSink').value),gracePeriod:parseInt(document.getElementById('csGrace').value),interestRate:parseFloat(document.getElementById('csInterest').value),secretary:document.getElementById('csSec').value,chairman:document.getElementById('csChair').value,treasurer:document.getElementById('csTreas').value,bankName:document.getElementById('csBank').value,bankAcNo:document.getElementById('csAcNo').value,ifsc:document.getElementById('csIFSC').value,contactPhone:document.getElementById('csPhone').value,createdAt:Date.now()});alert('Society created');show('societies');}
-async function loadAdminDash(){const snap=await db.collection('sp2_societies').get();document.getElementById('admStats').innerHTML=`<div class="stat"><div class="sv">${snap.size}</div><div class="sl">Societies</div></div>`;let h='';snap.forEach(d=>{h+=`<div class="sc" onclick="openSociety('${d.id}')"><div>🏢 ${d.data().displayName}</div><button class="btn bn bsm">Open</button></div>`;});document.getElementById('admSocList').innerHTML=h;}
-async function loadSocList(){const snap=await db.collection('sp2_societies').get();let h='';snap.forEach(d=>{h+=`<div class="sc"><div>${d.data().displayName}</div><button class="btn bn" onclick="openSociety('${d.id}')">Open</button><button class="btn br" onclick="deleteSociety('${d.id}')">Del</button></div>`;});document.getElementById('socListFull').innerHTML=h;}
-async function deleteSociety(id){if(confirm('Delete all data?'))await db.collection('sp2_societies').doc(id).delete();loadSocList();}
-async function openSociety(id){const doc=await db.collection('sp2_societies').doc(id).get();ST={socId:id,socData:doc.data()};document.getElementById('navAdmin').style.display='none';document.getElementById('navSoc').style.display='block';document.getElementById('tbBack').style.display='block';document.getElementById('tbSoc').innerText=doc.data().displayName;show('socDash');}
-function goBackToAdmin(){ST={socId:null,socData:null};document.getElementById('navSoc').style.display='none';document.getElementById('navAdmin').style.display='block';document.getElementById('tbBack').style.display='none';show('dashboard');}
-// Financial Years modal
-async function openFyModal(){if(!ST.socId)return;const snap=await db.collection('sp2_societies').doc(ST.socId).collection('financialYears').get();let html='<ul>';snap.forEach(d=>html+=`<li>${d.data().name} ${d.data().isActive?'✅ Active':''} ${!d.data().isActive?`<button onclick="setActiveFY('${d.id}')">Activate</button>`:''}</li>`);html+='</ul>';document.getElementById('fyList').innerHTML=html;document.getElementById('fyModal').classList.add('open');}
-async function addFinancialYear(){const name=document.getElementById('newFyName').value.trim();if(!name)return;await db.collection('sp2_societies').doc(ST.socId).collection('financialYears').add({name,isActive:false});openFyModal();}
-async function setActiveFY(fyId){const ref=db.collection('sp2_societies').doc(ST.socId).collection('financialYears');const all=await ref.get();all.forEach(d=>ref.doc(d.id).update({isActive:false}));await ref.doc(fyId).update({isActive:true});openFyModal();}
-function closeFyModal(){document.getElementById('fyModal').classList.remove('open');}
-// Heads & helpers
-async function loadHeadsList(){if(!ST.socId)return;const snap=await db.collection('heads').where('society','==',ST.socId).get();let inc='',exp='';snap.forEach(d=>{const h=d.data();if(h.type==='income')inc+=`<div class="chip cg">${h.name}</div> `;else exp+=`<div class="chip cr2">${h.name}</div> `;});document.getElementById('incomeHeadsList').innerHTML=inc||'None';document.getElementById('expenseHeadsList').innerHTML=exp||'None';}
-async function loadHeadsIntoSelect(){const snap=await db.collection('heads').where('society','==',ST.socId).where('type','==','income').get();let opt='';snap.forEach(d=>opt+=`<option value="${d.data().name}">${d.data().name}</option>`);document.getElementById('rHeadSelect').innerHTML=opt||'<option>Maintenance</option>';}
-async function loadExpenseHeadsSelect(){const snap=await db.collection('heads').where('society','==',ST.socId).where('type','==','expense').get();let opt='';snap.forEach(d=>opt+=`<option value="${d.data().name}">${d.data().name}</option>`);document.getElementById('expHead').innerHTML=opt||'<option>General Expense</option>';}
-function showAddHeadModal(){const name=prompt('Enter Head Name');if(!name)return;const type=confirm('OK for Income, Cancel for Expense')?'income':'expense';db.collection('heads').add({society:ST.socId,name,type});loadHeadsList();loadHeadsIntoSelect();loadExpenseHeadsSelect();}
-// Members
-async function loadMembers(){const snap=await db.collection('sp2_members').where('society','==',ST.socId).get();let rows='';snap.forEach(d=>{const m=d.data();rows+=`<tr><td>${m.flatNo}</td><td>${m.name}</td><td>${m.phone}</td><td>${m.type}</td><td>${m.status}</td><td>${m.customMaintenance||ST.socData.maintenancePerFlat}</td><td>${m.openingBalance||0}</td><td><button class="btn br bxs" onclick="delMember('${d.id}')">Del</button></td></tr>`;});document.getElementById('memTbody').innerHTML=rows;}
-async function saveMember(){const flat=document.getElementById('mbFlat').value;if(!flat)return;await db.collection('sp2_members').add({society:ST.socId,flatNo:flat,name:document.getElementById('mbName').value,phone:document.getElementById('mbPhone').value,email:document.getElementById('mbEmail').value,type:document.getElementById('mbType').value,status:document.getElementById('mbStatus').value,openingBalance:parseFloat(document.getElementById('mbOpBal').value)||0,openingBalanceType:document.getElementById('mbOpType').value,customMaintenance:parseFloat(document.getElementById('mbMaint').value)||0});setTab('m','list');loadMembers();}
-async function delMember(id){await db.collection('sp2_members').doc(id).delete();loadMembers();}
-// Receipts
-async function loadReceipts(){const snap=await db.collection('sp2_receipts').where('society','==',ST.socId).get();let rows='';snap.forEach(d=>{const r=d.data();rows+=`<tr><td>${r.date}</td><td>${r.flatNo}</td><td>${r.head}</td><td>${r.mode}</td><td class="cr">₹${r.amount}</td><td><button class="btn br bxs" onclick="delReceipt('${d.id}')">Del</button></td></tr>`;});document.getElementById('recTbody').innerHTML=rows;}
-async function saveReceipt(){const flat=document.getElementById('rFlat').value,amount=parseFloat(document.getElementById('rAmt').value);if(!flat||!amount)return;await db.collection('sp2_receipts').add({society:ST.socId,date:document.getElementById('rDate').value,flatNo:flat,head:document.getElementById('rHeadSelect').value,amount, mode:document.getElementById('rMode').value,chequeNo:document.getElementById('rChqNo').value,narration:document.getElementById('rNarr').value,timestamp:Date.now()});alert('Receipt saved');setTab('r','list');loadReceipts();}
-function showMemberOutstanding(){}
-// Expenses
-async function loadExpenses(){const snap=await db.collection('expenses').where('society','==',ST.socId).get();let rows='';snap.forEach(d=>{const e=d.data();rows+=`<tr><td>${e.date}</td><td>${e.head}</td><td>${e.mode}</td><td class="dr">₹${e.amount}</td><td>${e.narration||''}</td><td><button class="btn br bxs" onclick="delExpense('${d.id}')">Del</button></td></tr>`;});document.getElementById('expTbody').innerHTML=rows;}
-async function saveExpense(){await db.collection('expenses').add({society:ST.socId,date:document.getElementById('expDate').value,head:document.getElementById('expHead').value,amount:parseFloat(document.getElementById('expAmt').value),mode:document.getElementById('expMode').value,refNo:document.getElementById('expRef').value,narration:document.getElementById('expNarr').value});loadExpenses();setTab('e','list');}
-// Bills & Interest
-async function previewBills(){const month=document.getElementById('billMonth').value;const dueDate=document.getElementById('billDue').value;const membersSnap=await db.collection('sp2_members').where('society','==',ST.socId).get();const receiptsSnap=await db.collection('sp2_receipts').where('society','==',ST.socId).get();const paidMap={};receiptsSnap.forEach(r=>{const p=r.data();paidMap[p.flatNo]=(paidMap[p.flatNo]||0)+p.amount;});let html='<div class="bpg">';for(const doc of membersSnap.docs){const m=doc.data();const maint=m.customMaintenance||ST.socData.maintenancePerFlat;const dueAmount=maint - (paidMap[m.flatNo]||0);let interest=0;if(dueAmount>0&&ST.socData.interestRate&&new Date()>new Date(dueDate))interest=dueAmount*ST.socData.interestRate/100;const total=Math.max(0,dueAmount+interest);html+=`<div class="bc"><div>${m.flatNo} - ${m.name}</div><div>Due: ₹${total}</div><button class="btn bn" onclick="downloadBillPDF('${m.flatNo}','${m.name}',${total})">PDF</button></div>`;}html+='</div><button class="btn bgold" onclick="generateAllBillsPDF()">Download All Bills</button>';document.getElementById('billsPreviewArea').innerHTML=html;}
-function downloadBillPDF(flat,name,amt){const {jsPDF}=window.jspdf;const doc=new jsPDF();doc.text(`Society: ${ST.socData.displayName}`,10,10);doc.text(`Bill for ${flat} - ${name}`,10,20);doc.text(`Due Amount: ₹${amt}`,10,30);doc.save(`${flat}_bill.pdf`);}
-function generateAllBillsPDF(){alert('PDF generation demo - all bills saved');}
-// Ledger & other exports
-async function loadLedger(){const flat=document.getElementById('ledFlat').value;if(!flat)return;const snaps=await db.collection('sp2_receipts').where('society','==',ST.socId).where('flatNo','==',flat).get();let total=0,rows='';snaps.forEach(r=>{const amt=r.data().amount;total+=amt;rows+=`<tr><td>${r.data().date}</td><td>${r.data().head}</td><td class="cr">₹${amt}</td></tr>`;});document.getElementById('ledgerArea').innerHTML=`<div class="tw"><table><thead><tr><th>Date</th><th>Head</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table><div>Total: ₹${total}</div><button class="btn bn" onclick="exportLedgerExcel('${flat}')">Export Excel</button><button class="btn bg" onclick="exportLedgerPDF('${flat}')">PDF</button></div>`;}
-function exportLedgerExcel(flat){alert('Excel export ready in production');}
-function exportLedgerPDF(flat){alert('PDF export ready');}
-async function loadBook(type){const from=document.getElementById(type==='cash'?'cbFrom':'bbFrom').value;const to=document.getElementById(type==='cash'?'cbTo':'bbTo').value;const snap=await db.collection('sp2_receipts').where('society','==',ST.socId).get();let rows='',total=0;snap.forEach(d=>{const r=d.data();if(r.date>=from&&r.date<=to){if(type==='cash'&&r.mode==='Cash'){total+=r.amount;rows+=`<tr><td>${r.date}</td><td>${r.flatNo}</td><td>${r.head}</td><td>₹${r.amount}</td></tr>`;}if(type==='bank'&&r.mode!=='Cash'){total+=r.amount;rows+=`<tr><td>${r.date}</td><td>${r.flatNo}</td><td>${r.head}</td><td>₹${r.amount}</td></tr>`;}}});document.getElementById(type==='cash'?'cashTbody':'bankTbody').innerHTML=rows;document.getElementById(type==='cash'?'cashFoot':'bankFoot')?.remove();}
-function exportBookFilter(type){alert('Export CSV feature');}
-async function loadHeadLedger(){const head=document.getElementById('hlHead').value;const from=document.getElementById('hlFrom').value;const to=document.getElementById('hlTo').value;const snap=await db.collection('sp2_receipts').where('society','==',ST.socId).where('head','==',head).get();let total=0,rows='';snap.forEach(r=>{const d=r.data();if(d.date>=from&&d.date<=to){total+=d.amount;rows+=`<tr><td>${d.date}</td><td>${d.flatNo}</td><td>₹${d.amount}</td></tr>`;}});document.getElementById('headLedgerResult').innerHTML=`<div class="tw"><table>${rows}</table><strong>Total: ₹${total}</strong></div>`;}
-function populateFlats(){db.collection('sp2_members').where('society','==',ST.socId).get().then(snap=>{let opts='';snap.forEach(d=>opts+=`<option value="${d.data().flatNo}">${d.data().flatNo}</option>`);document.getElementById('rFlat').innerHTML=opts;document.getElementById('ledFlat').innerHTML=opts;});}
-function populateLedgerSel(){populateFlats();}
-function loadHeadSelector(){db.collection('heads').where('society','==',ST.socId).get().then(snap=>{let opts='';snap.forEach(d=>opts+=`<option>${d.data().name}</option>`);document.getElementById('hlHead').innerHTML=opts;});}
-function setDefaultDates(){const today=new Date().toISOString().slice(0,10);if(document.getElementById('recExpFrom')&&!document.getElementById('recExpFrom').value)document.getElementById('recExpFrom').value=new Date(new Date().setDate(1)).toISOString().slice(0,10);if(document.getElementById('recExpTo'))document.getElementById('recExpTo').value=today;}
-function toggleChqField(modeId,wrapId){document.getElementById(wrapId).style.display=document.getElementById(modeId).value==='Cheque'?'block':'none';}
-function toggleLedgerMonth(){document.getElementById('ledMonthWrap').style.display=document.getElementById('ledPeriod').value==='month'?'block':'none';loadLedger();}
-async function loadSocDash(){const mem=await db.collection('sp2_members').where('society','==',ST.socId).get();document.getElementById('sdTitle').innerHTML=`${ST.socData.displayName} Dashboard`;document.getElementById('sdStats').innerHTML=`<div class="stat"><div class="sv">${mem.size}</div><div class="sl">Members</div></div>`;}
-function exportMembers(){alert('Excel export');}
-function exportReceiptsWithFilter(){alert('Export receipts with date range');}
-function previewReceiptImport(){alert('Upload mapping demo')}
-function importReceiptExcel(){alert('Imported')}
-function importExpenseExcel(){alert('Expense import')}
-function delReceipt(id){db.collection('sp2_receipts').doc(id).delete();loadReceipts();}
-function delExpense(id){db.collection('expenses').doc(id).delete();loadExpenses();}
-// Additional defaults
-window.initHeads=async()=>{if(ST.socId){const existing=await db.collection('heads').where('society','==',ST.socId).get();if(existing.empty){db.collection('heads').add({society:ST.socId,name:'Maintenance',type:'income'});db.collection('heads').add({society:ST.socId,name:'Sinking Fund',type:'income'});db.collection('heads').add({society:ST.socId,name:'Repairs',type:'expense'});db.collection('heads').add({society:ST.socId,name:'Electricity',type:'expense'});}}}
-setInterval(()=>{if(ST.socId)initHeads();},2000);
+// ════════════════════════════════════════
+// FIREBASE CONFIG — Replace with your own
+// ════════════════════════════════════════
+firebase.initializeApp({
+  apiKey:            "AIzaSyAoW-ZL7vGSwxRwBDLuh1AAaz4I_Wvuq54",
+  authDomain:        "society-accounting-dcfd5.firebaseapp.com",
+  projectId:         "society-accounting-dcfd5",
+  storageBucket:     "society-accounting-dcfd5.firebasestorage.app",
+  messagingSenderId: "28055105870",
+  appId:             "1:28055105870:web:003a92f2387c2872e0ae1f"
+});
+
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+const ST = {
+  socId: null,
+  socData: null,
+  fyLabel: null,
+  fyStart: null,
+  fyEnd: null,
+  members: [],
+  heads: []
+};
+
+// ════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════
+const fmt  = v => '₹' + Number(v||0).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtN = v => Number(v||0).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+const tc   = s => (s||'').replace(/\b\w/g,c=>c.toUpperCase());
+const sFile= () => (ST.socData?.name||'society').replace(/\s+/g,'_').toLowerCase();
+const today= () => new Date().toISOString().substring(0,10);
+const mL   = m => { if(!m) return ''; const [y,mo]=m.split('-'); return new Date(y,mo-1,1).toLocaleString('en-IN',{month:'long',year:'numeric'}); };
+const toast= (msg,type='as') => {
+  let t=document.createElement('div');
+  t.className='alert '+type;t.style.cssText='position:fixed;bottom:22px;right:22px;z-index:9999;max-width:340px;animation:pi .2s ease';
+  t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3200);
+};
+
+function show(panel) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  const el = document.getElementById('panel-'+panel);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('[data-p="'+panel+'"]').forEach(n=>n.classList.add('active'));
+  document.getElementById('sidebar').classList.remove('open');
+  // Load data
+  const loaders = {
+    dashboard: loadAdminDash,
+    societies: loadSocieties,
+    socDash: loadSocDash,
+    members: loadMembers,
+    receipts: loadReceipts,
+    payments: loadPayments,
+    cashbook: loadCashBook,
+    bankbook: loadBankBook,
+    ledger: () => { populateLedgerSel(); loadLedger(); },
+    headLedger: () => { populateHeadSel(); loadHeadLedger(); },
+    bills: initBills,
+    expHeads: loadHeads
+  };
+  if(loaders[panel]) loaders[panel]();
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+function xlDown(rows, sheetName, fileName) {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, fileName);
+}
+
+// ════════════════════════════════════════
+// AUTH
+// ════════════════════════════════════════
+function doLogin() {
+  const email = document.getElementById("lEmail").value;
+  const pass = document.getElementById("lPass").value;
+
+  firebase.auth().signInWithEmailAndPassword(email, pass)
+    .then((userCredential) => {
+      alert("Login Successful");
+    })
+    .catch((error) => {
+      document.getElementById("lErr").innerText = error.message;
+    });
+}
+async function doLogout() {
+  await auth.signOut();
+}
+
+function goBackToAdmin() {
+  ST.socId=null; ST.socData=null; ST.fyLabel=null; ST.fyStart=null; ST.fyEnd=null;
+  document.getElementById('navAdmin').style.display='block';
+  document.getElementById('navSoc').style.display='none';
+  document.getElementById('tbBack').style.display='none';
+  document.getElementById('tbFY').style.display='none';
+  document.getElementById('tbSoc').textContent='Dashboard';
+  show('dashboard');
+}
+
+// ════════════════════════════════════════
+// ADMIN DASHBOARD
+// ════════════════════════════════════════
+async function loadAdminDash() {
+  const snap = await db.collection('sp2_societies').get();
+  const socs = []; snap.forEach(d=>socs.push({id:d.id,...d.data()}));
+  document.getElementById('admStats').innerHTML=`
+    <div class="stat gold"><div class="sv">${socs.length}</div><div class="sl">Total Societies</div></div>
+    <div class="stat b"><div class="sv">${socs.reduce((a,s)=>a+(s.totalFlats||0),0)}</div><div class="sl">Total Flats</div></div>`;
+  document.getElementById('admSocList').innerHTML = socs.length
+    ? socs.map(s=>`<div class="sc" onclick="openSociety('${s.id}')">
+        <div class="sc-ico">🏢</div>
+        <div class="sc-info">
+          <div class="sc-name">${s.name||'—'}</div>
+          <div class="sc-meta">${s.address||''} · ${s.totalFlats||0} Flats · Est. ${s.startDate||'—'}</div>
+        </div>
+        <span class="chip cn">Open →</span>
+      </div>`).join('')
+    : '<div class="empty">No societies yet. Create one.</div>';
+}
+
+async function loadSocieties() {
+  const snap = await db.collection('sp2_societies').get();
+  const socs = []; snap.forEach(d=>socs.push({id:d.id,...d.data()}));
+  document.getElementById('socListFull').innerHTML = socs.length
+    ? socs.map(s=>`<div class="sc" onclick="openSociety('${s.id}')">
+        <div class="sc-ico">🏢</div>
+        <div class="sc-info">
+          <div class="sc-name">${s.name}</div>
+          <div class="sc-meta">${s.address||''} · Reg: ${s.regNo||'—'} · Secretary: ${s.secretary||'—'} · ${s.totalFlats||0} Flats</div>
+        </div>
+        <span class="chip cn">Open →</span>
+      </div>`).join('')
+    : '<div class="empty">No societies found.</div>';
+}
+
+// ════════════════════════════════════════
+// OPEN SOCIETY → FY SELECTOR
+// ════════════════════════════════════════
+async function openSociety(id) {
+  const snap = await db.collection('sp2_societies').doc(id).get();
+  if(!snap.exists) return toast('Society not found','ae');
+  const sd = snap.data();
+  document.getElementById('mFYSocName').textContent = sd.name;
+
+  // Build FY list
+  const fyStart = parseInt(sd.fyStart||4);
+  const now = new Date();
+  let curFYYear = now.getFullYear();
+  if(now.getMonth()+1 < fyStart) curFYYear--;
+
+  // Get existing FYs
+  const fySnap = await db.collection('sp2_societies').doc(id).collection('financialYears').get();
+  const existing = []; fySnap.forEach(d=>existing.push(d.id));
+
+  // Show existing
+  const listEl = document.getElementById('mFYList');
+  listEl.innerHTML = existing.length
+    ? existing.map(fy=>`<div class="sc" onclick="selectFY('${id}','${fy}')" style="padding:10px 14px">
+        <div class="sc-ico" style="width:36px;height:36px;font-size:.85rem">📅</div>
+        <div class="sc-info"><div class="sc-name">${fy}</div><div class="sc-meta">Click to open this year</div></div>
+        <span class="chip cg">Open</span>
+      </div>`).join('')
+    : '<div class="empty" style="padding:14px">No financial years yet. Create one below.</div>';
+
+  // Populate new FY options (current + next 2 + past 3)
+  const opts = [];
+  for(let i=-3; i<=2; i++) {
+    const y1 = curFYYear+i;
+    const y2 = y1+1;
+    const label = `${y1}-${String(y2).slice(-2)}`;
+    if(!existing.includes(label)) opts.push(label);
+  }
+  document.getElementById('mFYNew').innerHTML = '<option value="">-- Select Year --</option>'+
+    opts.map(o=>`<option value="${o}">${o}</option>`).join('');
+
+  document.getElementById('mFYSel').classList.add('open');
+  // Store pending id
+  document.getElementById('mFYSel').dataset.socId = id;
+}
+
+async function addAndSelectFY() {
+  const id = document.getElementById('mFYSel').dataset.socId;
+  const fy = document.getElementById('mFYNew').value;
+  if(!fy) return toast('Please select a year','aw');
+  await db.collection('sp2_societies').doc(id).collection('financialYears').doc(fy).set({created:new Date().toISOString()});
+  closeModal('mFYSel');
+  selectFY(id, fy);
+}
+
+async function selectFY(socId, fyLabel) {
+  closeModal('mFYSel');
+  const snap = await db.collection('sp2_societies').doc(socId).get();
+  const sd = snap.data();
+  ST.socId   = socId;
+  ST.socData = sd;
+  ST.fyLabel = fyLabel;
+
+  // Parse FY dates
+  const [y1str, y2str] = fyLabel.split('-');
+  const y1 = parseInt(y1str);
+  const y2 = y1+1;
+  const fyM = parseInt(sd.fyStart||4)-1;
+  ST.fyStart = new Date(y1, fyM, 1);
+  ST.fyEnd   = new Date(y2, fyM, 0);
+
+  document.getElementById('navAdmin').style.display='none';
+  document.getElementById('navSoc').style.display='block';
+  document.getElementById('tbBack').style.display='inline-flex';
+  document.getElementById('tbFY').style.display='inline-block';
+  document.getElementById('tbSoc').textContent = sd.name;
+  document.getElementById('tbFY').textContent  = 'FY ' + fyLabel;
+
+  // Load members into state
+  await refreshMembers();
+  await refreshHeads();
+
+  show('socDash');
+}
+
+async function refreshMembers() {
+  const snap = await db.collection('sp2_members').where('society','==',ST.socId).get();
+  ST.members = []; snap.forEach(d=>ST.members.push({id:d.id,...d.data()}));
+  ST.members.sort((a,b)=>(a.flatNo||'').localeCompare(b.flatNo||'',undefined,{numeric:true}));
+}
+
+async function refreshHeads() {
+  const builtIn = [
+    {id:'__maint',name:'Maintenance',type:'Income',builtin:true,desc:'Monthly maintenance charges'},
+    {id:'__sink',name:'Sinking Fund',type:'Income',builtin:true,desc:'Sinking fund collection'},
+    {id:'__repair',name:'Repair Fund',type:'Income',builtin:true,desc:'Repair fund collection'},
+    {id:'__water',name:'Water Charges',type:'Income',builtin:true,desc:'Water charges'},
+    {id:'__parking',name:'Parking Charges',type:'Income',builtin:true,desc:'Parking charges'},
+    {id:'__elec',name:'Electricity',type:'Expense',builtin:true,desc:'Common area electricity'},
+    {id:'__security',name:'Security',type:'Expense',builtin:true,desc:'Security guard salary'},
+    {id:'__cleaning',name:'Cleaning',type:'Expense',builtin:true,desc:'Cleaning / housekeeping'},
+    {id:'__misc',name:'Miscellaneous',type:'Expense',builtin:true,desc:'Miscellaneous expenses'},
+  ];
+  const snap = await db.collection('sp2_heads').where('society','==',ST.socId).get();
+  const custom = []; snap.forEach(d=>custom.push({id:d.id,...d.data()}));
+  ST.heads = [...builtIn, ...custom];
+}
+
+// ════════════════════════════════════════
+// CREATE SOCIETY
+// ════════════════════════════════════════
+async function saveSociety() {
+  const name = document.getElementById('csName').value.trim();
+  const addr = document.getElementById('csAddr').value.trim();
+  const flats = parseInt(document.getElementById('csFlats').value)||0;
+  const maint = parseFloat(document.getElementById('csMaint').value)||0;
+  if(!name||!addr||!flats||!maint) return toast('Please fill all required fields (*)','aw');
+  const data = {
+    name, address:addr,
+    city: document.getElementById('csCity').value.trim(),
+    pincode: document.getElementById('csPin').value.trim(),
+    regNo: document.getElementById('csReg').value.trim(),
+    secretary: document.getElementById('csSecretary').value.trim(),
+    chairman: document.getElementById('csChairman').value.trim(),
+    treasurer: document.getElementById('csTreasurer').value.trim(),
+    phone: document.getElementById('csPhone').value.trim(),
+    fyStart: parseInt(document.getElementById('csFY').value),
+    startDate: document.getElementById('csDate').value,
+    totalFlats: flats,
+    maintenancePerFlat: maint,
+    sinkingFund: parseFloat(document.getElementById('csSink').value)||0,
+    repairFund: parseFloat(document.getElementById('csRepair').value)||0,
+    gracePeriod: parseInt(document.getElementById('csGrace').value)||10,
+    interestRate: parseFloat(document.getElementById('csInterest').value)||0,
+    bankName: document.getElementById('csBank').value.trim(),
+    bankAcNo: document.getElementById('csAcNo').value.trim(),
+    ifsc: document.getElementById('csIFSC').value.trim(),
+    branch: document.getElementById('csBranch').value.trim(),
+    createdAt: new Date().toISOString()
+  };
+  await db.collection('sp2_societies').add(data);
+  toast('Society created successfully! 🎉','as');
+  ['csName','csReg','csAddr','csCity','csPin','csSecretary','csChairman','csTreasurer','csPhone','csDate','csFlats','csMaint','csSink','csRepair','csBank','csAcNo','csIFSC','csBranch'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  show('societies');
+}
+
+// ════════════════════════════════════════
+// SOC DASHBOARD
+// ════════════════════════════════════════
+async function loadSocDash() {
+  if(!ST.socId) return;
+  const sd = ST.socData;
+  document.getElementById('sdTitle').innerHTML = `${sd.name}<small>${sd.address||''} · FY ${ST.fyLabel}</small>`;
+
+  // Stats
+  const [recSnap, paySnap] = await Promise.all([
+    db.collection('sp2_receipts').where('society','==',ST.socId).get(),
+    db.collection('sp2_payments').where('society','==',ST.socId).get()
+  ]);
+  let totalRec=0, totalPay=0;
+  recSnap.forEach(d=>{ const r=d.data(); if(inFY(r.date)) totalRec+=parseFloat(r.amount||0); });
+  paySnap.forEach(d=>{ const p=d.data(); if(inFY(p.date)) totalPay+=parseFloat(p.amount||0); });
+
+  document.getElementById('sdStats').innerHTML=`
+    <div class="stat"><div class="sv">${ST.members.length}</div><div class="sl">Total Members</div></div>
+    <div class="stat g"><div class="sv">${fmt(totalRec)}</div><div class="sl">FY Receipts</div></div>
+    <div class="stat r"><div class="sv">${fmt(totalPay)}</div><div class="sl">FY Payments</div></div>
+    <div class="stat gold"><div class="sv">${fmt(totalRec-totalPay)}</div><div class="sl">Net Balance</div></div>`;
+
+  // Recent receipts
+  const recArr=[]; recSnap.forEach(d=>recArr.push({id:d.id,...d.data()}));
+  recArr.sort((a,b)=>b.date>a.date?1:-1);
+  document.getElementById('sdRecReceipts').innerHTML = recArr.slice(0,5).length
+    ? `<div class="tw"><table><thead><tr><th>Date</th><th>Flat</th><th>Amount</th></tr></thead><tbody>
+        ${recArr.slice(0,5).map(r=>`<tr><td>${r.date}</td><td>${r.flatNo}</td><td style="color:var(--green);font-weight:600">${fmt(r.amount)}</td></tr>`).join('')}
+      </tbody></table></div>`
+    : '<div class="empty">No receipts yet</div>';
+
+  // Recent payments
+  const payArr=[]; paySnap.forEach(d=>payArr.push({id:d.id,...d.data()}));
+  payArr.sort((a,b)=>b.date>a.date?1:-1);
+  document.getElementById('sdRecPayments').innerHTML = payArr.slice(0,5).length
+    ? `<div class="tw"><table><thead><tr><th>Date</th><th>Head</th><th>Amount</th></tr></thead><tbody>
+        ${payArr.slice(0,5).map(p=>`<tr><td>${p.date}</td><td>${p.head||'—'}</td><td style="color:var(--red);font-weight:600">${fmt(p.amount)}</td></tr>`).join('')}
+      </tbody></table></div>`
+    : '<div class="empty">No payments yet</div>';
+
+  // Defaulters
+  const defaulters = await calcDefaulters();
+  document.getElementById('sdDefaulters').innerHTML = defaulters.length
+    ? `<div class="tw"><table><thead><tr><th>Flat</th><th>Member</th><th>Due Amount</th></tr></thead><tbody>
+        ${defaulters.map(d=>`<tr><td>${d.flat}</td><td>${d.name}</td><td style="color:var(--red);font-weight:600">${fmt(d.due)}</td></tr>`).join('')}
+      </tbody></table></div>`
+    : '<div class="empty">🎉 No defaulters! All members are up to date.</div>';
+}
+
+function inFY(dateStr) {
+  if(!ST.fyStart||!ST.fyEnd) return true;
+  const d = new Date(dateStr+'T00:00:00');
+  return d>=ST.fyStart && d<=ST.fyEnd;
+}
+
+async function calcDefaulters() {
+  const recSnap = await db.collection('sp2_receipts').where('society','==',ST.socId).get();
+  const paidMap = {};
+  recSnap.forEach(d=>{ const r=d.data(); paidMap[r.flatNo]=(paidMap[r.flatNo]||0)+parseFloat(r.amount||0); });
+
+  const now = new Date();
+  const sd = ST.socData;
+  const socStart = new Date(sd.startDate||now);
+  const totalMths = (now.getFullYear()-socStart.getFullYear())*12+(now.getMonth()-socStart.getMonth());
+
+  return ST.members.map(m=>{
+    const maint = parseFloat(m.customMaintenance||0)||parseFloat(sd.maintenancePerFlat||0);
+    const charged = maint * (totalMths+1) + (m.openingBalanceType==='Dr'?parseFloat(m.openingBalance||0):0);
+    const paid = paidMap[m.flatNo]||0;
+    const due = charged - paid;
+    return {flat:m.flatNo, name:m.name, due};
+  }).filter(d=>d.due>0).sort((a,b)=>b.due-a.due);
+}
+
+// ════════════════════════════════════════
+// MEMBERS
+// ════════════════════════════════════════
+function openAddMember(id) {
+  ['mFlatNo','mName','mPhone','mEmail','mMaint','mNotes'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('mOB').value='0';
+  document.getElementById('mType').value='Owner';
+  document.getElementById('mOBType').value='Dr';
+  document.getElementById('mEditId').value='';
+  document.getElementById('mAddMemberTitle').textContent='➕ Add Member';
+  if(id) {
+    const m = ST.members.find(x=>x.id===id);
+    if(m) {
+      document.getElementById('mFlatNo').value=m.flatNo||'';
+      document.getElementById('mName').value=m.name||'';
+      document.getElementById('mPhone').value=m.phone||'';
+      document.getElementById('mEmail').value=m.email||'';
+      document.getElementById('mType').value=m.type||'Owner';
+      document.getElementById('mMaint').value=m.customMaintenance||'';
+      document.getElementById('mOB').value=m.openingBalance||0;
+      document.getElementById('mOBType').value=m.openingBalanceType||'Dr';
+      document.getElementById('mNotes').value=m.notes||'';
+      document.getElementById('mEditId').value=id;
+      document.getElementById('mAddMemberTitle').textContent='✏️ Edit Member';
+    }
+  }
+  openModal('mAddMember');
+}
+
+async function saveMember() {
+  const flatNo = document.getElementById('mFlatNo').value.trim().toUpperCase();
+  const name   = document.getElementById('mName').value.trim();
+  const phone  = document.getElementById('mPhone').value.trim();
+  const email  = document.getElementById('mEmail').value.trim();
+  if(!flatNo||!name||!phone||!email) return toast('Flat No., Name, Phone and Email are required','aw');
+  if(!/^[0-9]{10}$/.test(phone)) return toast('Enter a valid 10-digit phone number','aw');
+  if(!/\S+@\S+\.\S+/.test(email)) return toast('Enter a valid email address','aw');
+
+  const data = {
+    society: ST.socId,
+    flatNo, name, phone, email,
+    type: document.getElementById('mType').value,
+    customMaintenance: parseFloat(document.getElementById('mMaint').value)||0,
+    openingBalance: parseFloat(document.getElementById('mOB').value)||0,
+    openingBalanceType: document.getElementById('mOBType').value,
+    notes: document.getElementById('mNotes').value.trim(),
+    updatedAt: new Date().toISOString()
+  };
+  const editId = document.getElementById('mEditId').value;
+  if(editId) {
+    await db.collection('sp2_members').doc(editId).update(data);
+    toast('Member updated','as');
+  } else {
+    data.createdAt = new Date().toISOString();
+    await db.collection('sp2_members').add(data);
+    toast('Member added','as');
+  }
+  closeModal('mAddMember');
+  await refreshMembers();
+  loadMembers();
+}
+
+async function deleteMember(id) {
+  if(!confirm('Delete this member? This cannot be undone.')) return;
+  await db.collection('sp2_members').doc(id).delete();
+  toast('Member deleted','ae');
+  await refreshMembers();
+  loadMembers();
+}
+
+function loadMembers() {
+  const search = (document.getElementById('memSearch')?.value||'').toLowerCase();
+  const typeF  = document.getElementById('memTypeFilter')?.value||'';
+  let mems = ST.members.filter(m => {
+    const ms = ((m.flatNo||'')+(m.name||'')).toLowerCase();
+    return ms.includes(search) && (!typeF||m.type===typeF);
+  });
+  const tbody = document.getElementById('memTbody');
+  tbody.innerHTML = mems.length
+    ? mems.map(m=>`<tr>
+        <td><strong>${m.flatNo}</strong></td>
+        <td>${m.name}</td>
+        <td><span class="chip ${m.type==='Owner'?'cn':'cb'}">${m.type}</span></td>
+        <td>${m.phone||'—'}</td>
+        <td style="font-size:.78rem">${m.email||'—'}</td>
+        <td>${fmt(m.customMaintenance||ST.socData?.maintenancePerFlat||0)}</td>
+        <td><span style="color:${m.openingBalanceType==='Dr'?'var(--red)':'var(--green)'};font-weight:600">${fmt(m.openingBalance||0)} ${m.openingBalanceType||'Dr'}</span></td>
+        <td>
+          <button class="btn bgh bxs" onclick="openAddMember('${m.id}')">✏️</button>
+          <button class="btn br bxs" onclick="deleteMember('${m.id}')">🗑</button>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="8" class="empty">No members found</td></tr>';
+}
+
+function exportMembersXL() {
+  const rows=[['Flat No','Name','Type','Phone','Email','Maintenance','Opening Balance','OB Type','Notes']];
+  ST.members.forEach(m=>rows.push([m.flatNo,m.name,m.type,m.phone,m.email,m.customMaintenance||ST.socData?.maintenancePerFlat,m.openingBalance||0,m.openingBalanceType||'Dr',m.notes||'']));
+  xlDown(rows,'Members',sFile()+'-members.xlsx');
+}
+
+// ════════════════════════════════════════
+// RECEIPTS
+// ════════════════════════════════════════
+function openAddReceipt(id) {
+  ['rDate','rAmt','rCheque','rNarr'].forEach(f=>{ const el=document.getElementById(f); if(el) el.value=''; });
+  document.getElementById('rDate').value = today();
+  document.getElementById('rMode').value='Cash';
+  document.getElementById('rHead').value='Maintenance';
+  document.getElementById('rEditId').value='';
+  document.getElementById('rMemberName').value='';
+  document.getElementById('rBalDisplay').innerHTML='— Select a flat first —';
+  document.getElementById('recObAlert').style.display='none';
+  document.getElementById('mAddReceiptTitle').textContent='➕ Add Receipt';
+
+  // Populate flats
+  document.getElementById('rFlat').innerHTML='<option value="">-- Select Flat --</option>'+
+    ST.members.map(m=>`<option value="${m.flatNo}">${m.flatNo} – ${m.name}</option>`).join('');
+
+  if(id) {
+    // Load existing receipt for edit
+    db.collection('sp2_receipts').doc(id).get().then(snap=>{
+      if(!snap.exists) return;
+      const r=snap.data();
+      document.getElementById('rDate').value=r.date||today();
+      document.getElementById('rFlat').value=r.flatNo||'';
+      document.getElementById('rHead').value=r.head||'Maintenance';
+      document.getElementById('rAmt').value=r.amount||'';
+      document.getElementById('rMode').value=r.mode||'Cash';
+      document.getElementById('rCheque').value=r.chequeNo||'';
+      document.getElementById('rNarr').value=r.narration||'';
+      document.getElementById('rMemberName').value=r.memberName||'';
+      document.getElementById('rEditId').value=id;
+      document.getElementById('mAddReceiptTitle').textContent='✏️ Edit Receipt';
+      onReceiptFlatChange();
+    });
+  }
+  openModal('mAddReceipt');
+}
+
+async function onReceiptFlatChange() {
+  const flat = document.getElementById('rFlat').value;
+  const mem = ST.members.find(m=>m.flatNo===flat);
+  if(!mem) { document.getElementById('rMemberName').value=''; document.getElementById('rBalDisplay').innerHTML='—'; return; }
+  document.getElementById('rMemberName').value=mem.name;
+
+  // Calc current balance
+  const bal = await getMemberBalance(flat);
+  const el = document.getElementById('rBalDisplay');
+  if(bal>0) { el.innerHTML=`<span style="color:var(--red);font-weight:700">${fmt(bal)} Due (Dr)</span> — Member owes this amount`; }
+  else if(bal<0) { el.innerHTML=`<span style="color:var(--green);font-weight:700">${fmt(Math.abs(bal))} Advance (Cr)</span> — Member has advance`; }
+  else { el.innerHTML=`<span style="color:var(--green)">₹0.00 — Fully Paid</span>`; }
+}
+
+async function getMemberBalance(flatNo) {
+  const mem = ST.members.find(m=>m.flatNo===flatNo);
+  if(!mem) return 0;
+  const sd = ST.socData;
+  const maint = parseFloat(mem.customMaintenance||0)||parseFloat(sd.maintenancePerFlat||0);
+  const now = new Date();
+  const socStart = new Date(sd.startDate||now);
+  const totalMths = (now.getFullYear()-socStart.getFullYear())*12+(now.getMonth()-socStart.getMonth());
+  let charged = maint*(totalMths+1);
+  if(mem.openingBalanceType==='Dr') charged+=parseFloat(mem.openingBalance||0);
+  else charged-=parseFloat(mem.openingBalance||0);
+
+  const snap = await db.collection('sp2_receipts').where('society','==',ST.socId).where('flatNo','==',flatNo).get();
+  let paid=0; snap.forEach(d=>paid+=parseFloat(d.data().amount||0));
+  return charged-paid;
+}
+
+async function saveReceipt() {
+  const date  = document.getElementById('rDate').value;
+  const flat  = document.getElementById('rFlat').value;
+  const amt   = parseFloat(document.getElementById('rAmt').value)||0;
+  if(!date||!flat||!amt) return toast('Date, Flat and Amount are required','aw');
+
+  // Validate date within FY
+  if(ST.fyStart && ST.fyEnd) {
+    const d = new Date(date+'T00:00:00');
+    if(d<ST.fyStart||d>ST.fyEnd) return toast(`Date must be within FY ${ST.fyLabel} (${ST.fyStart.toDateString()} – ${ST.fyEnd.toDateString()})`, 'aw');
+  }
+
+  const mem = ST.members.find(m=>m.flatNo===flat);
+  const data = {
+    society: ST.socId,
+    date, flatNo: flat,
+    memberName: mem?.name||document.getElementById('rMemberName').value,
+    head: document.getElementById('rHead').value,
+    amount: amt,
+    mode: document.getElementById('rMode').value,
+    chequeNo: document.getElementById('rCheque').value.trim(),
+    narration: document.getElementById('rNarr').value.trim(),
+    updatedAt: new Date().toISOString()
+  };
+  const editId = document.getElementById('rEditId').value;
+  if(editId) {
+    await db.collection('sp2_receipts').doc(editId).update(data);
+    toast('Receipt updated','as');
+  } else {
+    data.createdAt = new Date().toISOString();
+    await db.collection('sp2_receipts').add(data);
+    toast('Receipt saved','as');
+  }
+  closeModal('mAddReceipt');
+  loadReceipts();
+}
+
+async function deleteReceipt(id) {
+  if(!confirm('Delete this receipt?')) return;
+  await db.collection('sp2_receipts').doc(id).delete();
+  toast('Receipt deleted','ae');
+  loadReceipts();
+}
+
+async function loadReceipts() {
+  if(!ST.socId) return;
+  const search = (document.getElementById('recSearch')?.value||'').toLowerCase();
+  const mode   = document.getElementById('recModeFilter')?.value||'';
+  const month  = document.getElementById('recMonthFilter')?.value||'';
+  const from   = document.getElementById('recFrom')?.value||'';
+  const to     = document.getElementById('recTo')?.value||'';
+
+  let q = db.collection('sp2_receipts').where('society','==',ST.socId);
+  const snap = await q.get();
+  let recs=[]; snap.forEach(d=>recs.push({id:d.id,...d.data()}));
+
+  recs = recs.filter(r=>{
+    if(mode && r.mode!==mode) return false;
+    if(month && !r.date?.startsWith(month)) return false;
+    if(from && r.date<from) return false;
+    if(to && r.date>to) return false;
+    const s=((r.flatNo||'')+(r.narration||'')+(r.memberName||'')).toLowerCase();
+    if(search && !s.includes(search)) return false;
+    return true;
+  });
+  recs.sort((a,b)=>b.date>a.date?1:-1);
+
+  let total=0;
+  const tbody=document.getElementById('recTbody');
+  tbody.innerHTML = recs.length
+    ? recs.map(r=>{ total+=parseFloat(r.amount||0); return `<tr>
+        <td style="white-space:nowrap">${r.date}</td>
+        <td><strong>${r.flatNo}</strong></td>
+        <td>${r.memberName||'—'}</td>
+        <td><span class="tag">${r.head||'—'}</span></td>
+        <td style="color:var(--green);font-weight:700">${fmt(r.amount)}</td>
+        <td><span class="chip cn">${r.mode||'—'}</span></td>
+        <td style="font-size:.78rem">${r.chequeNo||'—'}</td>
+        <td style="font-size:.78rem">${r.narration||'—'}</td>
+        <td>
+          <button class="btn bgh bxs" onclick="openAddReceipt('${r.id}')">✏️</button>
+          <button class="btn br bxs" onclick="deleteReceipt('${r.id}')">🗑</button>
+        </td>
+      </tr>`; }).join('')
+    : '<tr><td colspan="9" class="empty">No receipts found</td></tr>';
+
+  document.getElementById('recSummary').innerHTML=recs.length
+    ? `<div class="lfoot" style="border-radius:var(--r2)"><div class="lf">Records: <strong>${recs.length}</strong></div><div class="lf">Total: <strong style="color:var(--green)">${fmt(total)}</strong></div></div>` : '';
+}
+
+function clearRecFilters() {
+  ['recSearch','recMonthFilter','recFrom','recTo'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('recModeFilter').value='';
+  loadReceipts();
+}
+
+async function exportReceiptsXL() {
+  const snap=await db.collection('sp2_receipts').where('society','==',ST.socId).get();
+  const rows=[['Date','Flat No','Member Name','Head','Amount (Rs)','Mode','Cheque/Ref','Narration']];
+  const recs=[]; snap.forEach(d=>recs.push(d.data()));
+  recs.sort((a,b)=>a.date>b.date?1:-1);
+  recs.forEach(r=>rows.push([r.date,r.flatNo,r.memberName||'',r.head||'',r.amount||0,r.mode||'',r.chequeNo||'',r.narration||'']));
+  xlDown(rows,'Receipts',sFile()+'-receipts-'+new Date().toISOString().substring(0,10)+'.xlsx');
+}
+
+async function importReceiptsXL(input) {
+  const file=input.files[0]; if(!file) return;
+  const ab=await file.arrayBuffer();
+  const wb=XLSX.read(ab,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+  let count=0;
+  for(const row of data) {
+    const date=row['Date']||row['date']||'';
+    const flat=String(row['Flat No']||row['flat_no']||row['FlatNo']||'').trim().toUpperCase();
+    const amt=parseFloat(row['Amount (Rs)']||row['Amount']||row['amount']||0);
+    if(!date||!flat||!amt) continue;
+    if(ST.fyStart && ST.fyEnd) {
+      const d=new Date(date+'T00:00:00');
+      if(d<ST.fyStart||d>ST.fyEnd) continue;
+    }
+    const mem=ST.members.find(m=>m.flatNo===flat);
+    await db.collection('sp2_receipts').add({
+      society:ST.socId, date:String(date).substring(0,10),
+      flatNo:flat, memberName:mem?.name||String(row['Member Name']||''),
+      head:String(row['Head']||'Maintenance'),
+      amount:amt, mode:String(row['Mode']||'Cash'),
+      chequeNo:String(row['Cheque/Ref']||''),
+      narration:String(row['Narration']||''),
+      createdAt:new Date().toISOString()
+    });
+    count++;
+  }
+  input.value='';
+  toast(`${count} receipts imported`,'as');
+  loadReceipts();
+}
+
+// ════════════════════════════════════════
+// PAYMENTS
+// ════════════════════════════════════════
+function openAddPayment(id) {
+  ['pDate','pAmt','pCheque','pNarr'].forEach(f=>{ const el=document.getElementById(f); if(el) el.value=''; });
+  document.getElementById('pDate').value=today();
+  document.getElementById('pMode').value='Cash';
+  document.getElementById('pEditId').value='';
+  document.getElementById('mAddPaymentTitle').textContent='➕ Add Payment';
+
+  // Populate expense heads
+  const expHeads=ST.heads.filter(h=>h.type==='Expense');
+  document.getElementById('pHead').innerHTML=expHeads.map(h=>`<option value="${h.name}">${h.name}</option>`).join('');
+
+  if(id) {
+    db.collection('sp2_payments').doc(id).get().then(snap=>{
+      if(!snap.exists) return;
+      const p=snap.data();
+      document.getElementById('pDate').value=p.date||today();
+      document.getElementById('pHead').value=p.head||'';
+      document.getElementById('pAmt').value=p.amount||'';
+      document.getElementById('pMode').value=p.mode||'Cash';
+      document.getElementById('pCheque').value=p.chequeNo||'';
+      document.getElementById('pNarr').value=p.narration||'';
+      document.getElementById('pEditId').value=id;
+      document.getElementById('mAddPaymentTitle').textContent='✏️ Edit Payment';
+    });
+  }
+  openModal('mAddPayment');
+}
+
+async function savePayment() {
+  const date = document.getElementById('pDate').value;
+  const head = document.getElementById('pHead').value;
+  const amt  = parseFloat(document.getElementById('pAmt').value)||0;
+  const narr = document.getElementById('pNarr').value.trim();
+  if(!date||!head||!amt||!narr) return toast('All fields are required','aw');
+
+  if(ST.fyStart && ST.fyEnd) {
+    const d=new Date(date+'T00:00:00');
+    if(d<ST.fyStart||d>ST.fyEnd) return toast(`Date must be within FY ${ST.fyLabel}`,'aw');
+  }
+
+  const data={
+    society:ST.socId, date, head,
+    amount:amt, mode:document.getElementById('pMode').value,
+    chequeNo:document.getElementById('pCheque').value.trim(), narration:narr,
+    updatedAt:new Date().toISOString()
+  };
+  const editId=document.getElementById('pEditId').value;
+  if(editId) { await db.collection('sp2_payments').doc(editId).update(data); toast('Payment updated','as'); }
+  else { data.createdAt=new Date().toISOString(); await db.collection('sp2_payments').add(data); toast('Payment saved','as'); }
+  closeModal('mAddPayment');
+  loadPayments();
+}
+
+async function deletePayment(id) {
+  if(!confirm('Delete this payment?')) return;
+  await db.collection('sp2_payments').doc(id).delete();
+  toast('Payment deleted','ae');
+  loadPayments();
+}
+
+async function loadPayments() {
+  if(!ST.socId) return;
+  const search=(document.getElementById('paySearch')?.value||'').toLowerCase();
+  const mode=document.getElementById('payModeFilter')?.value||'';
+  const headF=document.getElementById('payHeadFilter')?.value||'';
+  const month=document.getElementById('payMonthFilter')?.value||'';
+
+  const snap=await db.collection('sp2_payments').where('society','==',ST.socId).get();
+  let pays=[]; snap.forEach(d=>pays.push({id:d.id,...d.data()}));
+
+  pays=pays.filter(p=>{
+    if(mode && p.mode!==mode) return false;
+    if(headF && p.head!==headF) return false;
+    if(month && !p.date?.startsWith(month)) return false;
+    const s=((p.head||'')+(p.narration||'')).toLowerCase();
+    if(search && !s.includes(search)) return false;
+    return true;
+  });
+  pays.sort((a,b)=>b.date>a.date?1:-1);
+
+  // Populate head filter
+  const expHeads=ST.heads.filter(h=>h.type==='Expense');
+  document.getElementById('payHeadFilter').innerHTML='<option value="">All Heads</option>'+
+    expHeads.map(h=>`<option value="${h.name}" ${headF===h.name?'selected':''}>${h.name}</option>`).join('');
+
+  let total=0;
+  const tbody=document.getElementById('payTbody');
+  tbody.innerHTML=pays.length
+    ? pays.map(p=>{ total+=parseFloat(p.amount||0); return `<tr>
+        <td style="white-space:nowrap">${p.date}</td>
+        <td><span class="tag">${p.head||'—'}</span></td>
+        <td style="color:var(--red);font-weight:700">${fmt(p.amount)}</td>
+        <td><span class="chip cn">${p.mode||'—'}</span></td>
+        <td style="font-size:.78rem">${p.chequeNo||'—'}</td>
+        <td style="font-size:.78rem">${p.narration||'—'}</td>
+        <td>
+          <button class="btn bgh bxs" onclick="openAddPayment('${p.id}')">✏️</button>
+          <button class="btn br bxs" onclick="deletePayment('${p.id}')">🗑</button>
+        </td>
+      </tr>`; }).join('')
+    : '<tr><td colspan="7" class="empty">No payments found</td></tr>';
+
+  document.getElementById('paySummary').innerHTML=pays.length
+    ? `<div class="lfoot" style="border-radius:var(--r2)"><div class="lf">Records: <strong>${pays.length}</strong></div><div class="lf">Total: <strong style="color:var(--red)">${fmt(total)}</strong></div></div>` : '';
+}
+
+function clearPayFilters() {
+  ['paySearch','payMonthFilter'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('payModeFilter').value='';
+  document.getElementById('payHeadFilter').value='';
+  loadPayments();
+}
+
+async function exportPaymentsXL() {
+  const snap=await db.collection('sp2_payments').where('society','==',ST.socId).get();
+  const rows=[['Date','Head','Amount (Rs)','Mode','Cheque/Ref','Narration']];
+  const pays=[]; snap.forEach(d=>pays.push(d.data()));
+  pays.sort((a,b)=>a.date>b.date?1:-1);
+  pays.forEach(p=>rows.push([p.date,p.head||'',p.amount||0,p.mode||'',p.chequeNo||'',p.narration||'']));
+  xlDown(rows,'Payments',sFile()+'-payments-'+new Date().toISOString().substring(0,10)+'.xlsx');
+}
+
+async function importPaymentsXL(input) {
+  const file=input.files[0]; if(!file) return;
+  const ab=await file.arrayBuffer();
+  const wb=XLSX.read(ab,{type:'array'});
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+  let count=0;
+  for(const row of data) {
+    const date=String(row['Date']||row['date']||'').substring(0,10);
+    const amt=parseFloat(row['Amount (Rs)']||row['Amount']||row['amount']||0);
+    const narr=String(row['Narration']||row['narration']||'');
+    if(!date||!amt||!narr) continue;
+    await db.collection('sp2_payments').add({
+      society:ST.socId, date,
+      head:String(row['Head']||row['head']||'Miscellaneous'),
+      amount:amt, mode:String(row['Mode']||row['mode']||'Cash'),
+      chequeNo:String(row['Cheque/Ref']||''), narration:narr,
+      createdAt:new Date().toISOString()
+    });
+    count++;
+  }
+  input.value='';
+  toast(`${count} payments imported`,'as');
+  loadPayments();
+}
+
+// ════════════════════════════════════════
+// CASH BOOK
+// ════════════════════════════════════════
+async function loadCashBook() {
+  if(!ST.socId) return;
+  const month=document.getElementById('cbMonth').value;
+  const [recSnap,paySnap]=await Promise.all([
+    db.collection('sp2_receipts').where('society','==',ST.socId).get(),
+    db.collection('sp2_payments').where('society','==',ST.socId).get()
+  ]);
+  let entries=[];
+  recSnap.forEach(d=>{ const r=d.data(); if(r.mode==='Cash') { if(!month||r.date?.startsWith(month)) entries.push({date:r.date,particulars:(r.flatNo?r.flatNo+' – ':'')+( r.narration||r.head||'Receipt'),type:'Receipt',receipt:parseFloat(r.amount||0),payment:0}); } });
+  paySnap.forEach(d=>{ const p=d.data(); if(p.mode==='Cash') { if(!month||p.date?.startsWith(month)) entries.push({date:p.date,particulars:p.head+(p.narration?' — '+p.narration:''),type:'Payment',receipt:0,payment:parseFloat(p.amount||0)}); } });
+  entries.sort((a,b)=>a.date>b.date?1:-1);
+  renderBook('cb',entries,'Cash');
+}
+
+async function loadBankBook() {
+  if(!ST.socId) return;
+  const month=document.getElementById('bbMonth').value;
+  const [recSnap,paySnap]=await Promise.all([
+    db.collection('sp2_receipts').where('society','==',ST.socId).get(),
+    db.collection('sp2_payments').where('society','==',ST.socId).get()
+  ]);
+  let entries=[];
+  recSnap.forEach(d=>{ const r=d.data(); if(r.mode!=='Cash') { if(!month||r.date?.startsWith(month)) entries.push({date:r.date,particulars:(r.flatNo?r.flatNo+' – ':'')+( r.narration||r.head||'Receipt')+(r.chequeNo?' #'+r.chequeNo:''),type:'Receipt',receipt:parseFloat(r.amount||0),payment:0}); } });
+  paySnap.forEach(d=>{ const p=d.data(); if(p.mode!=='Cash') { if(!month||p.date?.startsWith(month)) entries.push({date:p.date,particulars:p.head+(p.narration?' — '+p.narration:'')+(p.chequeNo?' #'+p.chequeNo:''),type:'Payment',receipt:0,payment:parseFloat(p.amount||0)}); } });
+  entries.sort((a,b)=>a.date>b.date?1:-1);
+  renderBook('bb',entries,'Bank');
+}
+
+function renderBook(prefix, entries, bookName) {
+  let bal=0,totRec=0,totPay=0;
+  const rows=entries.map(e=>{
+    bal+=e.receipt-e.payment; totRec+=e.receipt; totPay+=e.payment;
+    const bc=bal>=0?'var(--green)':'var(--red)';
+    return `<tr>
+      <td style="white-space:nowrap">${e.date}</td>
+      <td>${e.particulars}</td>
+      <td><span class="chip ${e.type==='Receipt'?'cg':'cr2'}">${e.type}</span></td>
+      <td style="color:var(--green);font-weight:600">${e.receipt>0?fmt(e.receipt):'—'}</td>
+      <td style="color:var(--red);font-weight:600">${e.payment>0?fmt(e.payment):'—'}</td>
+      <td style="font-weight:700;color:${bc}">${fmt(Math.abs(bal))} ${bal>=0?'Cr':'Dr'}</td>
+    </tr>`;
+  });
+  document.getElementById(prefix+'Bal').innerHTML=`<div class="book-bal">
+    <div><div class="bv">${fmt(totRec)}</div><div class="bl2">Total ${bookName} Receipts</div></div>
+    <div><div class="bv">${fmt(totPay)}</div><div class="bl2">Total ${bookName} Payments</div></div>
+    <div><div class="bv">${fmt(Math.abs(bal))}</div><div class="bl2">Closing Balance ${bal>=0?'(Cr)':'(Dr)'}</div></div>
+  </div>`;
+  document.getElementById(prefix+'Tbody').innerHTML=rows.length
+    ? rows.join('')
+    : '<tr><td colspan="6" class="empty">No '+bookName+' transactions found</td></tr>';
+}
+
+async function exportBookXL(type) {
+  const month=document.getElementById(type==='cash'?'cbMonth':'bbMonth').value;
+  const [recSnap,paySnap]=await Promise.all([
+    db.collection('sp2_receipts').where('society','==',ST.socId).get(),
+    db.collection('sp2_payments').where('society','==',ST.socId).get()
+  ]);
+  let entries=[];
+  const isCash=type==='cash';
+  recSnap.forEach(d=>{ const r=d.data(); if(isCash?r.mode==='Cash':r.mode!=='Cash') { if(!month||r.date?.startsWith(month)) entries.push({date:r.date,particulars:(r.flatNo?r.flatNo+' – ':'')+( r.narration||r.head||'Receipt'),type:'Receipt',receipt:parseFloat(r.amount||0),payment:0}); } });
+  paySnap.forEach(d=>{ const p=d.data(); if(isCash?p.mode==='Cash':p.mode!=='Cash') { if(!month||p.date?.startsWith(month)) entries.push({date:p.date,particulars:p.head+(p.narration?' — '+p.narration:''),type:'Payment',receipt:0,payment:parseFloat(p.amount||0)}); } });
+  entries.sort((a,b)=>a.date>b.date?1:-1);
+  let bal=0;
+  const rows=[['Date','Particulars','Type','Receipt (Rs)','Payment (Rs)','Balance (Rs)']];
+  entries.forEach(e=>{ bal+=e.receipt-e.payment; rows.push([e.date,e.particulars,e.type,e.receipt||'',e.payment||'',fmtN(bal)]); });
+  xlDown(rows,(isCash?'Cash':'Bank')+'Book',sFile()+'-'+(isCash?'cashbook':'bankbook')+'.xlsx');
+}
+
+// ════════════════════════════════════════
+// MEMBER LEDGER
+// ════════════════════════════════════════
+async function populateLedgerSel() {
+  await refreshMembers();
+  document.getElementById('ledFlat').innerHTML='<option value="">-- Select Member --</option>'+
+    ST.members.map(m=>`<option value="${m.flatNo}" data-id="${m.id}">${m.flatNo} – ${m.name}</option>`).join('');
+}
+
+async function loadLedger() {
+  const flatNo=document.getElementById('ledFlat').value;
+  const period=document.getElementById('ledPeriod').value;
+  const ledMonth=document.getElementById('ledMonth')?.value||'';
+  const ledFrom=document.getElementById('ledFrom')?.value||'';
+  const ledTo=document.getElementById('ledTo')?.value||'';
+
+  document.getElementById('ledMonthWrap').style.display=period==='month'?'block':'none';
+  document.getElementById('ledCustomWrap').style.display=period==='custom'?'block':'none';
+
+  const area=document.getElementById('ledgerArea');
+  if(!flatNo) { area.innerHTML='<div class="empty">Select a member to view ledger.</div>'; return; }
+
+  const mem=ST.members.find(m=>m.flatNo===flatNo);
+  if(!mem) return;
+  const sd=ST.socData;
+  const maint=parseFloat(mem.customMaintenance||0)||parseFloat(sd.maintenancePerFlat||0);
+  const opBal=parseFloat(mem.openingBalance||0);
+  const opType=mem.openingBalanceType||'Dr';
+  const now=new Date();
+  const socStart=new Date(sd.startDate||now);
+
+  // Date filter
+  let fromDate=null,toDate=null;
+  if(period==='fy') { fromDate=ST.fyStart; toDate=ST.fyEnd; }
+  else if(period==='month'&&ledMonth) { const [y,m]=ledMonth.split('-').map(Number); fromDate=new Date(y,m-1,1); toDate=new Date(y,m,0); }
+  else if(period==='custom') { if(ledFrom) fromDate=new Date(ledFrom+'T00:00:00'); if(ledTo) toDate=new Date(ledTo+'T23:59:59'); }
+
+  const recSnap=await db.collection('sp2_receipts').where('society','==',ST.socId).where('flatNo','==',flatNo).get();
+  const entries=[];
+
+  // Opening balance row
+  if(opBal>0) {
+    const opDate=sd.startDate||socStart.toISOString().substring(0,10);
+    const opDt=new Date(opDate+'T00:00:00');
+    if(!fromDate||opDt>=fromDate) entries.push({date:opDate,particulars:'Opening Balance',dr:opType==='Dr'?opBal:0,cr:opType==='Cr'?opBal:0,tag:'op'});
+  }
+
+  // Monthly charges
+  const totalMths=(now.getFullYear()-socStart.getFullYear())*12+(now.getMonth()-socStart.getMonth());
+  for(let i=0;i<=totalMths;i++){
+    const d=new Date(socStart.getFullYear(),socStart.getMonth()+i,1);
+    if(d>now) break;
+    if(fromDate&&d<fromDate) continue;
+    if(toDate&&d>toDate) break;
+    const dt=d.toISOString().substring(0,7)+'-01';
+    const ml=d.toLocaleString('en-IN',{month:'long',year:'numeric'});
+    entries.push({date:dt,particulars:'Maintenance Charges — '+ml,dr:maint,cr:0,tag:'charge'});
+  }
+
+  // Receipts
+  recSnap.forEach(d=>{
+    const u=d.data();
+    const dt=new Date(u.date+'T00:00:00');
+    if(fromDate&&dt<fromDate) return;
+    if(toDate&&dt>toDate) return;
+    const note=(u.narration||'Payment Received')+(u.mode?' ('+u.mode+')':'')+(u.chequeNo?' #'+u.chequeNo:'');
+    entries.push({date:u.date,particulars:note,dr:0,cr:parseFloat(u.amount||0),tag:'pay'});
+  });
+
+  entries.sort((a,b)=>a.date>b.date?1:-1);
+  let bal=0,totalDr=0,totalCr=0,rows='';
+  entries.forEach(e=>{
+    bal+=e.dr-e.cr; totalDr+=e.dr; totalCr+=e.cr;
+    const bc=bal>0?'var(--red)':'var(--green)';
+    const tagHtml=e.tag==='op'?'<span class="chip cgold">Opening</span> ':
+                  e.tag==='pay'?'<span class="chip cg">Paid</span> ':'';
+    rows+=`<tr>
+      <td style="white-space:nowrap">${e.date}</td>
+      <td>${tagHtml}${e.particulars}</td>
+      <td style="color:var(--red);font-weight:600">${e.dr>0?fmt(e.dr):'—'}</td>
+      <td style="color:var(--green);font-weight:600">${e.cr>0?fmt(e.cr):'—'}</td>
+      <td style="font-weight:700;color:${bc};white-space:nowrap">${fmt(Math.abs(bal))} ${bal>0?'Dr':'Cr'}</td>
+    </tr>`;
+  });
+
+  const periodLabel=period==='all'?'All Time':period==='fy'?'FY '+ST.fyLabel:period==='month'?mL(ledMonth):'Custom Range';
+  area.innerHTML=`
+    <div class="lhead">
+      <h3>${flatNo} — ${mem.name}</h3>
+      <p>${sd.name} · ${periodLabel} · ₹${maint}/month maintenance</p>
+    </div>
+    <div class="tw" style="border-radius:0">
+      <table>
+        <thead><tr><th>Date</th><th>Particulars</th><th>Debit (Dr) ₹</th><th>Credit (Cr) ₹</th><th>Balance</th></tr></thead>
+        <tbody>${rows||'<tr><td colspan="5" class="empty">No entries for this period.</td></tr>'}</tbody>
+      </table>
+    </div>
+    <div class="lfoot">
+      <div class="lf">Total Charged: <strong style="color:var(--red)">${fmt(totalDr)}</strong></div>
+      <div class="lf">Total Paid: <strong style="color:var(--green)">${fmt(totalCr)}</strong></div>
+      <div class="lf">Balance: <strong style="color:${bal>0?'var(--red)':'var(--green)'}">${fmt(Math.abs(bal))} ${bal>0?'(Due)':'(Advance)'}</strong></div>
+    </div>
+    <div style="padding:11px 17px;display:flex;gap:8px;background:#fff;border-radius:0 0 var(--r) var(--r)">
+      <button class="btn bn bsm" onclick="downloadLedgerPDF('${flatNo}','${mem.name}','${periodLabel}')">⬇ Download PDF</button>
+      <button class="btn bg bsm" onclick="exportLedgerXL('${flatNo}','${mem.name}')">⬇ Export Excel</button>
+    </div>`;
+}
+
+async function downloadLedgerPDF(flatNo,memName,periodLabel){
+  const mem=ST.members.find(m=>m.flatNo===flatNo);if(!mem)return;
+  const sd=ST.socData;
+  const maint=parseFloat(mem.customMaintenance||0)||parseFloat(sd.maintenancePerFlat||0);
+  const opBal=parseFloat(mem.openingBalance||0);const opType=mem.openingBalanceType||'Dr';
+  const recSnap=await db.collection('sp2_receipts').where('society','==',ST.socId).where('flatNo','==',flatNo).get();
+  const now=new Date();const socStart=new Date(sd.startDate||now);
+  const entries=[];
+  if(opBal>0)entries.push({date:sd.startDate,p:'Opening Balance',dr:opType==='Dr'?opBal:0,cr:opType==='Cr'?opBal:0});
+  const totalMths=(now.getFullYear()-socStart.getFullYear())*12+(now.getMonth()-socStart.getMonth());
+  for(let i=0;i<=totalMths;i++){const d=new Date(socStart.getFullYear(),socStart.getMonth()+i,1);if(d>now)break;entries.push({date:d.toISOString().substring(0,7)+'-01',p:'Maintenance — '+d.toLocaleString('en-IN',{month:'long',year:'numeric'}),dr:maint,cr:0});}
+  recSnap.forEach(d=>{const u=d.data();entries.push({date:u.date,p:(u.narration||'Payment')+(u.mode?' ('+u.mode+')':''),dr:0,cr:parseFloat(u.amount||0)});});
+  entries.sort((a,b)=>a.date>b.date?1:-1);
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const W=210,M=14;let y=M;
+  doc.setFillColor(26,39,68);doc.rect(M,y,W-2*M,24,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(13);
+  doc.text(sd.name||'Society',W/2,y+8,{align:'center'});
+  doc.setFont('helvetica','normal');doc.setFontSize(8);
+  doc.text('MEMBER LEDGER ACCOUNT',W/2,y+15,{align:'center'});
+  if(sd.address)doc.text(sd.address+(sd.city?', '+sd.city:''),W/2,y+20.5,{align:'center'});
+  y+=28;
+  doc.setTextColor(26,39,68);doc.setFont('helvetica','bold');doc.setFontSize(9);
+  doc.text('Flat: '+flatNo+' | Member: '+memName+' | Period: '+periodLabel,M,y);y+=5;
+  doc.setFillColor(26,39,68);doc.rect(M,y,W-2*M,7,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(7.5);
+  const C=[M+1,M+22,M+108,M+128,M+150];
+  ['Date','Particulars','Debit (Dr)','Credit (Cr)','Balance'].forEach((h,i)=>doc.text(h,C[i],y+5));
+  y+=9;let bal=0,tc2=0,tp=0;
+  entries.forEach((e,idx)=>{
+    if(y>272){doc.addPage();y=20;}
+    bal+=e.dr-e.cr;tc2+=e.dr;tp+=e.cr;
+    if(idx%2===0){doc.setFillColor(248,248,252);doc.rect(M,y-0.5,W-2*M,6.5,'F');}
+    doc.setTextColor(50,50,50);doc.setFont('helvetica','normal');doc.setFontSize(7.5);
+    doc.text(e.date||'',C[0],y+4);
+    let pt=e.p||'';if(doc.getTextWidth(pt)>84)pt=pt.substring(0,44)+'…';
+    doc.text(pt,C[1],y+4);
+    if(e.dr>0){doc.setTextColor(192,57,43);doc.setFont('helvetica','bold');doc.text(fmtN(e.dr),C[2]+18,y+4,{align:'right'});}
+    if(e.cr>0){doc.setTextColor(27,122,74);doc.setFont('helvetica','bold');doc.text(fmtN(e.cr),C[3]+18,y+4,{align:'right'});}
+    doc.setTextColor(bal>0?192:27,bal>0?57:122,bal>0?43:74);doc.setFont('helvetica','bold');
+    doc.text(fmtN(Math.abs(bal))+(bal>0?' Dr':' Cr'),C[4]+26,y+4,{align:'right'});
+    doc.setDrawColor(225,225,230);doc.setLineWidth(0.1);doc.line(M,y+5.5,W-M,y+5.5);y+=6.5;
+  });
+  y+=3;
+  doc.setFillColor(255,243,220);doc.rect(M,y,W-2*M,10,'F');
+  doc.setDrawColor(201,150,58);doc.setLineWidth(0.4);doc.rect(M,y,W-2*M,10,'S');
+  doc.setTextColor(26,39,68);doc.setFont('helvetica','bold');doc.setFontSize(8.5);
+  doc.text('Total Charged: Rs.'+fmtN(tc2),M+3,y+7);
+  doc.text('Total Paid: Rs.'+fmtN(tp),M+60,y+7);
+  doc.text('Balance: Rs.'+fmtN(Math.abs(bal))+(bal>0?' Dr':' Cr'),M+115,y+7);
+  doc.setDrawColor(200,200,200);doc.setLineWidth(0.2);doc.line(M,282,W-M,282);
+  doc.setTextColor(180,180,180);doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+  doc.text('Generated by SocietyPro Accounting Software',W/2,286,{align:'center'});
+  doc.save(sFile()+'-ledger-'+flatNo+'-'+new Date().toISOString().substring(0,10)+'.pdf');
+}
+
+async function exportLedgerXL(flatNo,memName){
+  const mem=ST.members.find(m=>m.flatNo===flatNo);if(!mem)return;
+  const sd=ST.socData;
+  const maint=parseFloat(mem.customMaintenance||0)||parseFloat(sd.maintenancePerFlat||0);
+  const opBal=parseFloat(mem.openingBalance||0);const opType=mem.openingBalanceType||'Dr';
+  const recSnap=await db.collection('sp2_receipts').where('society','==',ST.socId).where('flatNo','==',flatNo).get();
+  const now=new Date();const socStart=new Date(sd.startDate||now);
+  const entries=[];
+  if(opBal>0)entries.push({date:sd.startDate,p:'Opening Balance',dr:opType==='Dr'?opBal:0,cr:opType==='Cr'?opBal:0});
+  const totalMths=(now.getFullYear()-socStart.getFullYear())*12+(now.getMonth()-socStart.getMonth());
+  for(let i=0;i<=totalMths;i++){const d=new Date(socStart.getFullYear(),socStart.getMonth()+i,1);if(d>now)break;entries.push({date:d.toISOString().substring(0,7)+'-01',p:'Maintenance — '+d.toLocaleString('en-IN',{month:'long',year:'numeric'}),dr:maint,cr:0});}
+  recSnap.forEach(d=>{const u=d.data();entries.push({date:u.date,p:(u.narration||'Payment')+(u.mode?' ('+u.mode+')':''),dr:0,cr:parseFloat(u.amount||0)});});
+  entries.sort((a,b)=>a.date>b.date?1:-1);
+  let bal=0;
+  const rows=[['Date','Particulars','Debit (Dr) Rs','Credit (Cr) Rs','Balance']];
+  entries.forEach(e=>{bal+=e.dr-e.cr;rows.push([e.date,e.p,e.dr||'',e.cr||'',fmtN(Math.abs(bal))+(bal>0?' Dr':' Cr')]);});
+  xlDown(rows,flatNo+'-Ledger',sFile()+'-ledger-'+flatNo+'-'+new Date().toISOString().substring(0,10)+'.xlsx');
+}
+
+// ════════════════════════════════════════
+// HEAD LEDGER
+// ════════════════════════════════════════
+async function populateHeadSel() {
+  await refreshHeads();
+  document.getElementById('hlHead').innerHTML='<option value="">-- Select Head --</option>'+
+    ST.heads.map(h=>`<option value="${h.name}">${h.name} (${h.type})</option>`).join('');
+}
+
+async function loadHeadLedger() {
+  const headName=document.getElementById('hlHead').value;
+  const period=document.getElementById('hlPeriod').value;
+  const month=document.getElementById('hlMonth')?.value||'';
+  document.getElementById('hlMonthWrap').style.display=period==='month'?'block':'none';
+
+  const area=document.getElementById('headLedgerArea');
+  if(!headName){ area.innerHTML='<div class="empty">Select a head to view its ledger.</div>'; return; }
+
+  let fromDate=null,toDate=null,periodLabel='All Time';
+  const now=new Date();
+  if(period==='fy'){ fromDate=ST.fyStart; toDate=ST.fyEnd; periodLabel='FY '+ST.fyLabel; }
+  else if(period==='month'&&month){ const [y,m]=month.split('-').map(Number); fromDate=new Date(y,m-1,1); toDate=new Date(y,m,0); periodLabel=mL(month); }
+
+  const head=ST.heads.find(h=>h.name===headName);
+  const isIncome=head?.type==='Income';
+
+  let snap,entries=[],total=0;
+  if(isIncome){
+    snap=await db.collection('sp2_receipts').where('society','==',ST.socId).where('head','==',headName).get();
+    snap.forEach(d=>{
+      const r=d.data();
+      const dt=new Date(r.date+'T00:00:00');
+      if(fromDate&&dt<fromDate)return;if(toDate&&dt>toDate)return;
+      entries.push({date:r.date,particulars:(r.flatNo?r.flatNo+' – ':'')+( r.narration||r.memberName||'Receipt'),amount:parseFloat(r.amount||0),mode:r.mode});
+      total+=parseFloat(r.amount||0);
+    });
+  } else {
+    snap=await db.collection('sp2_payments').where('society','==',ST.socId).where('head','==',headName).get();
+    snap.forEach(d=>{
+      const p=d.data();
+      const dt=new Date(p.date+'T00:00:00');
+      if(fromDate&&dt<fromDate)return;if(toDate&&dt>toDate)return;
+      entries.push({date:p.date,particulars:p.narration||'Payment',amount:parseFloat(p.amount||0),mode:p.mode});
+      total+=parseFloat(p.amount||0);
+    });
+  }
+  entries.sort((a,b)=>a.date>b.date?1:-1);
+
+  const rows=entries.map(e=>`<tr>
+    <td style="white-space:nowrap">${e.date}</td>
+    <td>${e.particulars}</td>
+    <td><span class="chip cn">${e.mode||'—'}</span></td>
+    <td style="color:${isIncome?'var(--green)':'var(--red)'};font-weight:700">${fmt(e.amount)}</td>
+  </tr>`).join('');
+
+  area.innerHTML=`
+    <div class="lhead"><h3>${headName}</h3><p>${ST.socData?.name} · ${periodLabel} · ${isIncome?'Income Head':'Expense Head'}</p></div>
+    <div class="tw" style="border-radius:0"><table>
+      <thead><tr><th>Date</th><th>Particulars</th><th>Mode</th><th>Amount (₹)</th></tr></thead>
+      <tbody>${rows||'<tr><td colspan="4" class="empty">No entries</td></tr>'}</tbody>
+    </table></div>
+    <div class="lfoot">
+      <div class="lf">Records: <strong>${entries.length}</strong></div>
+      <div class="lf">Total: <strong style="color:${isIncome?'var(--green)':'var(--red)'}">${fmt(total)}</strong></div>
+    </div>
+    <div style="padding:10px 17px;background:#fff;border-radius:0 0 var(--r) var(--r)">
+      <button class="btn bg bsm" onclick="exportHeadLedgerXL('${headName}','${periodLabel}')">⬇ Export Excel</button>
+    </div>`;
+}
+
+async function exportHeadLedgerXL(headName,periodLabel){
+  const head=ST.heads.find(h=>h.name===headName);
+  const isIncome=head?.type==='Income';
+  let snap,entries=[];
+  if(isIncome){
+    snap=await db.collection('sp2_receipts').where('society','==',ST.socId).where('head','==',headName).get();
+    snap.forEach(d=>{const r=d.data();entries.push([r.date,(r.flatNo?r.flatNo+' – ':'')+( r.narration||''),r.mode||'',r.amount||0]);});
+  } else {
+    snap=await db.collection('sp2_payments').where('society','==',ST.socId).where('head','==',headName).get();
+    snap.forEach(d=>{const p=d.data();entries.push([p.date,p.narration||'',p.mode||'',p.amount||0]);});
+  }
+  entries.sort((a,b)=>a[0]>b[0]?1:-1);
+  const rows=[['Date','Particulars','Mode','Amount (Rs)'],...entries];
+  xlDown(rows,headName,sFile()+'-head-'+headName.replace(/\s+/g,'_')+'-'+new Date().toISOString().substring(0,10)+'.xlsx');
+}
+
+// ════════════════════════════════════════
+// BILLS
+// ════════════════════════════════════════
+function initBills() {
+  if(!document.getElementById('billDate').value) document.getElementById('billDate').value=today();
+  const now=new Date();
+  if(!document.getElementById('billMonth').value) document.getElementById('billMonth').value=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  // Populate single flat select
+  document.getElementById('billSingleFlat').innerHTML='<option value="">Select Single Flat</option>'+
+    ST.members.map(m=>`<option value="${m.flatNo}">${m.flatNo} – ${m.name}</option>`).join('');
+}
+
+let billsData=[];
+
+async function generateBills() {
+  const billMonth=document.getElementById('billMonth').value;
+  const billDate=document.getElementById('billDate').value;
+  const billDue=document.getElementById('billDue').value;
+  if(!billMonth||!billDate) return toast('Bill Date and Month are required','aw');
+
+  const sd=ST.socData;
+  const recSnap=await db.collection('sp2_receipts').where('society','==',ST.socId).get();
+  const paidMap={};
+  recSnap.forEach(d=>{
+    const r=d.data();
+    if(r.date?.startsWith(billMonth)){
+      if(!paidMap[r.flatNo]) paidMap[r.flatNo]={amount:0,mode:r.mode,date:r.date,chequeNo:r.chequeNo};
+      paidMap[r.flatNo].amount+=parseFloat(r.amount||0);
+    }
+  });
+
+  billsData=[];
+  for(const m of ST.members) {
+    const maint=parseFloat(m.customMaintenance||0)||parseFloat(sd.maintenancePerFlat||0);
+    const sink=parseFloat(sd.sinkingFund||0);
+    const repair=parseFloat(sd.repairFund||0);
+    const total=maint+sink+repair;
+    const p=paidMap[m.flatNo]||null;
+    const bal=await getMemberBalance(m.flatNo);
+    billsData.push({
+      flatNo:m.flatNo, name:m.name, phone:m.phone, email:m.email,
+      maint, sink, repair, total,
+      paid:p?p.amount:0, mode:p?.mode, paidDate:p?.date, chequeNo:p?.chequeNo,
+      due:p?(total-p.amount>0?total-p.amount:0):total,
+      currentBalance:bal
+    });
+  }
+
+  const note=document.getElementById('billNote').value;
+  const monthLabel=mL(billMonth);
+  const grid=document.getElementById('billsGrid');
+  grid.innerHTML=billsData.map((b,i)=>`
+    <div class="bc" id="bc-${i}">
+      <div class="bch">
+        <div class="bflat">Flat No.</div>
+        <div class="bfno">${b.flatNo}</div>
+        <div class="bname">${b.name}</div>
+      </div>
+      <div class="bcb">
+        <div style="font-size:.8rem;color:var(--muted);margin-bottom:6px;font-weight:600">BILL FOR ${monthLabel.toUpperCase()}</div>
+        ${b.maint>0?`<div class="bl"><span>Maintenance</span><span>₹${fmtN(b.maint)}</span></div>`:''}
+        ${b.sink>0?`<div class="bl"><span>Sinking Fund</span><span>₹${fmtN(b.sink)}</span></div>`:''}
+        ${b.repair>0?`<div class="bl"><span>Repair Fund</span><span>₹${fmtN(b.repair)}</span></div>`:''}
+        <div class="bl tot"><span>Total Bill</span><span>₹${fmtN(b.total)}</span></div>
+        <div class="bl" style="margin-top:4px"><span style="color:var(--muted)">Overall Balance</span><span style="color:${b.currentBalance>0?'var(--red)':'var(--green)'};font-weight:600">${b.currentBalance>0?'₹'+fmtN(b.currentBalance)+' Due':'Paid'}</span></div>
+        ${b.paid>0?`<div class="bpaid">✅ Received ₹${fmtN(b.paid)} on ${b.paidDate||'—'} (${b.mode||'—'})</div>`:`<div class="bdue">⚠️ No payment received this month</div>`}
+        ${note?`<div style="margin-top:6px;font-size:.74rem;color:var(--muted);font-style:italic">📝 ${note}</div>`:''}
+      </div>
+      <div class="bcf">
+        <button class="btn bn bxs" onclick="genBillPDF(${i},'${billMonth}','${billDate}','${billDue}','${note}')">📄 PDF</button>
+      </div>
+    </div>`).join('');
+}
+
+async function genBillPDF(idx,billMonth,billDate,billDue,note){
+  const b=billsData[idx];
+  if(!b)return;
+  await makeBillPDF(b,billMonth,billDate,billDue,note);
+}
+
+async function genPDFAll(){
+  const billMonth=document.getElementById('billMonth').value;
+  const billDate=document.getElementById('billDate').value;
+  const billDue=document.getElementById('billDue').value;
+  const note=document.getElementById('billNote').value;
+  if(!billsData.length) await generateBills();
+  if(!billsData.length) return toast('No members to generate bills for','aw');
+  for(const b of billsData) { await makeBillPDF(b,billMonth,billDate,billDue,note); }
+  toast('All PDFs generated!','as');
+}
+
+async function genPDFSingle(){
+  const flat=document.getElementById('billSingleFlat').value;
+  const billMonth=document.getElementById('billMonth').value;
+  const billDate=document.getElementById('billDate').value;
+  const billDue=document.getElementById('billDue').value;
+  const note=document.getElementById('billNote').value;
+  if(!flat) return toast('Select a flat first','aw');
+  if(!billsData.length) await generateBills();
+  const b=billsData.find(x=>x.flatNo===flat);
+  if(!b) return toast('Member not found','aw');
+  await makeBillPDF(b,billMonth,billDate,billDue,note);
+}
+
+async function makeBillPDF(b,billMonth,billDate,billDue,note){
+  const sd=ST.socData;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a5'});
+  const W=148,H=210,M=12;
+  let y=M;
+
+  // Header
+  doc.setFillColor(26,39,68);doc.rect(0,0,W,36,'F');
+  doc.setFillColor(201,150,58);doc.rect(0,33,W,3,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(14);
+  doc.text(sd.name||'Society',W/2,y+7,{align:'center'});
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(200,200,200);
+  if(sd.address)doc.text(sd.address+(sd.city?', '+sd.city:''),W/2,y+14,{align:'center'});
+  if(sd.regNo)doc.text('Reg. No: '+sd.regNo,W/2,y+19,{align:'center'});
+  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,220,150);
+  doc.text('MAINTENANCE BILL',W/2,y+27,{align:'center'});
+  y=42;
+
+  // Bill info box
+  doc.setFillColor(240,244,255);doc.rect(M,y,W-2*M,18,'F');
+  doc.setDrawColor(180,190,220);doc.setLineWidth(0.3);doc.rect(M,y,W-2*M,18,'S');
+  doc.setTextColor(26,39,68);doc.setFont('helvetica','bold');doc.setFontSize(8);
+  doc.text('Flat No: '+b.flatNo,M+3,y+5);
+  doc.text('Member: '+b.name,M+3,y+10);
+  doc.text('Phone: '+(b.phone||'—'),M+3,y+15);
+  doc.text('Bill Date: '+billDate,M+70,y+5);
+  doc.text('Month: '+mL(billMonth),M+70,y+10);
+  if(billDue)doc.text('Due Date: '+billDue,M+70,y+15);
+  y+=23;
+
+  // Charges
+  doc.setFillColor(26,39,68);doc.rect(M,y,W-2*M,7,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(8);
+  doc.text('PARTICULARS',M+3,y+5);
+  doc.text('AMOUNT (Rs.)',W-M-3,y+5,{align:'right'});
+  y+=9;
+
+  const items=[];
+  if(b.maint>0)items.push(['Maintenance Charges',b.maint]);
+  if(b.sink>0)items.push(['Sinking Fund',b.sink]);
+  if(b.repair>0)items.push(['Repair Fund',b.repair]);
+
+  items.forEach((item,idx)=>{
+    if(idx%2===0){doc.setFillColor(248,249,255);doc.rect(M,y-1,W-2*M,7,'F');}
+    doc.setTextColor(50,50,50);doc.setFont('helvetica','normal');doc.setFontSize(8);
+    doc.text(item[0],M+3,y+4);
+    doc.text(fmtN(item[1]),W-M-3,y+4,{align:'right'});
+    y+=7;
+  });
+
+  // Total
+  doc.setFillColor(26,39,68);doc.rect(M,y,W-2*M,8,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(9);
+  doc.text('TOTAL BILL AMOUNT',M+3,y+5.5);
+  doc.text('Rs. '+fmtN(b.total),W-M-3,y+5.5,{align:'right'});
+  y+=12;
+
+  // Balance summary
+  doc.setFillColor(255,248,230);doc.rect(M,y,W-2*M,8,'F');
+  doc.setDrawColor(201,150,58);doc.setLineWidth(0.3);doc.rect(M,y,W-2*M,8,'S');
+  doc.setTextColor(100,70,0);doc.setFont('helvetica','bold');doc.setFontSize(8);
+  doc.text('Overall Balance: Rs. '+fmtN(Math.abs(b.currentBalance))+(b.currentBalance>0?' (Due)':' (Advance)'),M+3,y+5.5);
+  y+=12;
+
+  // Payment status
+  if(b.paid>0){
+    doc.setFillColor(232,247,239);doc.rect(M,y,W-2*M,11,'F');
+    doc.setDrawColor(26,122,74);doc.setLineWidth(0.3);doc.rect(M,y,W-2*M,11,'S');
+    doc.setTextColor(26,122,74);doc.setFont('helvetica','bold');doc.setFontSize(8);
+    doc.text('✔ PAYMENT RECEIVED',M+3,y+5);
+    doc.setFont('helvetica','normal');doc.setFontSize(7.5);
+    doc.text('Amount: Rs.'+fmtN(b.paid)+' | Mode: '+(b.mode||'—')+' | Date: '+(b.paidDate||'—'),M+3,y+9);
+    y+=14;
+  } else {
+    doc.setFillColor(254,235,235);doc.rect(M,y,W-2*M,8,'F');
+    doc.setDrawColor(192,57,43);doc.setLineWidth(0.3);doc.rect(M,y,W-2*M,8,'S');
+    doc.setTextColor(192,57,43);doc.setFont('helvetica','bold');doc.setFontSize(8);
+    doc.text('⚠ No payment received for this month',M+3,y+5.5);
+    y+=11;
+  }
+
+  // Bank details
+  if(sd.bankName||sd.bankAcNo){
+    doc.setFillColor(252,249,240);doc.rect(M,y,W-2*M,10,'F');
+    doc.setTextColor(100,80,0);doc.setFont('helvetica','normal');doc.setFontSize(7);
+    let bt='Pay to: ';if(sd.bankName)bt+=sd.bankName;if(sd.bankAcNo)bt+=' | A/c: '+sd.bankAcNo;if(sd.ifsc)bt+=' | IFSC: '+sd.ifsc;
+    doc.text(bt,W/2,y+4,{align:'center'});
+    if(sd.branch)doc.text('Branch: '+sd.branch,W/2,y+8,{align:'center'});
+    y+=13;
+  }
+
+  if(note){doc.setTextColor(120,80,0);doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.text('Note: '+note,W/2,y,{align:'center'});y+=6;}
+
+  // Contact
+  if(sd.secretary||sd.phone){
+    doc.setTextColor(120,120,120);doc.setFont('helvetica','normal');doc.setFontSize(7);
+    let ct='';if(sd.secretary)ct+='Secretary: '+sd.secretary;if(sd.phone)ct+=' | Ph: '+sd.phone;
+    doc.text(ct,W/2,y,{align:'center'});y+=5;
+  }
+
+  // Footer
+  doc.setDrawColor(200,200,200);doc.setLineWidth(0.2);doc.line(M,H-10,W-M,H-10);
+  doc.setTextColor(180,180,180);doc.setFont('helvetica','normal');doc.setFontSize(6);
+  doc.text('Generated by SocietyPro Accounting Software · This is a computer generated bill',W/2,H-6,{align:'center'});
+
+  doc.save(sFile()+'-bill-'+b.flatNo+'-'+billMonth+'.pdf');
+}
+
+// ════════════════════════════════════════
+// EXPENSE HEADS
+// ════════════════════════════════════════
+const BUILTIN_HEADS=[
+  {name:'Maintenance',type:'Income',desc:'Monthly maintenance charges',builtin:true},
+  {name:'Sinking Fund',type:'Income',desc:'Sinking fund collection',builtin:true},
+  {name:'Repair Fund',type:'Income',desc:'Repair fund collection',builtin:true},
+  {name:'Water Charges',type:'Income',desc:'Water charges',builtin:true},
+  {name:'Parking Charges',type:'Income',desc:'Parking charges',builtin:true},
+  {name:'Electricity',type:'Expense',desc:'Common area electricity',builtin:true},
+  {name:'Security',type:'Expense',desc:'Security guard salary',builtin:true},
+  {name:'Cleaning',type:'Expense',desc:'Cleaning / housekeeping',builtin:true},
+  {name:'Miscellaneous',type:'Expense',desc:'Miscellaneous expenses',builtin:true},
+];
+
+function openAddHead(id){
+  ['hName','hDesc'].forEach(f=>document.getElementById(f).value='');
+  document.getElementById('hType').value='Expense';
+  document.getElementById('hEditId').value='';
+  if(id){
+    db.collection('sp2_heads').doc(id).get().then(snap=>{
+      if(!snap.exists)return;
+      const h=snap.data();
+      document.getElementById('hName').value=h.name||'';
+      document.getElementById('hType').value=h.type||'Expense';
+      document.getElementById('hDesc').value=h.desc||'';
+      document.getElementById('hEditId').value=id;
+    });
+  }
+  openModal('mAddHead');
+}
+
+async function saveHead(){
+  const name=document.getElementById('hName').value.trim();
+  const type=document.getElementById('hType').value;
+  const desc=document.getElementById('hDesc').value.trim();
+  if(!name) return toast('Head name is required','aw');
+  const data={society:ST.socId,name,type,desc,updatedAt:new Date().toISOString()};
+  const editId=document.getElementById('hEditId').value;
+  if(editId){await db.collection('sp2_heads').doc(editId).update(data);toast('Head updated','as');}
+  else{data.createdAt=new Date().toISOString();await db.collection('sp2_heads').add(data);toast('Head added','as');}
+  closeModal('mAddHead');
+  await refreshHeads();
+  loadHeads();
+}
+
+async function deleteHead(id){
+  if(!confirm('Delete this head?'))return;
+  await db.collection('sp2_heads').doc(id).delete();
+  toast('Head deleted','ae');
+  await refreshHeads();
+  loadHeads();
+}
+
+async function loadHeads(){
+  await refreshHeads();
+  const tbody=document.getElementById('headsTbody');
+  tbody.innerHTML=ST.heads.map(h=>`<tr>
+    <td><strong>${h.name}</strong></td>
+    <td><span class="chip ${h.type==='Income'?'cg':'cr2'}">${h.type}</span></td>
+    <td style="font-size:.8rem;color:var(--muted)">${h.desc||'—'}</td>
+    <td>${h.builtin?'🔒 Yes':'—'}</td>
+    <td>
+      ${h.builtin?'<span style="font-size:.76rem;color:var(--muted)">Built-in</span>':`
+        <button class="btn bgh bxs" onclick="openAddHead('${h.id}')">✏️</button>
+        <button class="btn br bxs" onclick="deleteHead('${h.id}')">🗑</button>`}
+    </td>
+  </tr>`).join('');
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('lEmail').value='companyadmin@gmail.com';
+});
 </script>
 </body>
 </html>
