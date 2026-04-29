@@ -750,14 +750,16 @@ tbody tr:hover td{background:#fafaf8}
 // ════════════════════════════════════════
 // FIREBASE CONFIG — Replace with your own
 // ════════════════════════════════════════
-firebase.initializeApp({
+const firebaseConfig = {
   apiKey:            "AIzaSyAoW-ZL7vGSwxRwBDLuh1AAaz4I_Wvuq54",
   authDomain:        "society-accounting-dcfd5.firebaseapp.com",
   projectId:         "society-accounting-dcfd5",
   storageBucket:     "society-accounting-dcfd5.firebasestorage.app",
   messagingSenderId: "28055105870",
   appId:             "1:28055105870:web:003a92f2387c2872e0ae1f"
-});
+};
+
+firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db   = firebase.firestore();
@@ -841,7 +843,7 @@ function doLogin() {
     });
 }
 async function doLogout() {
-  await auth.signOut();
+await firebase.auth().signOut();
 }
 
 function goBackToAdmin() {
@@ -2201,6 +2203,9 @@ async function loadHeads(){
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('lEmail').value='companyadmin@gmail.com';
 });
+window.onload = function () {
+  document.getElementById("pgLogin").classList.add("show");
+};
 </script>
 </body>
 </html>
