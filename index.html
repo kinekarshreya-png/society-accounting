@@ -2203,8 +2203,16 @@ async function loadHeads(){
 document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('lEmail').value='companyadmin@gmail.com';
 });
+
 window.onload = function () {
-  document.getElementById("pgLogin").classList.add("show");
+  const loader = document.getElementById("loader");
+
+  loader.style.opacity = "0";
+
+  setTimeout(() => {
+    loader.style.display = "none";
+    document.getElementById("pgLogin").classList.add("show");
+  }, 400);
 };
 </script>
 </body>
